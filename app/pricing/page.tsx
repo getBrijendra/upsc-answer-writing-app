@@ -15,34 +15,35 @@ export default function PricingPage() {
   const [activeTab, setActiveTab] = useState<"credits" | "subscription">("credits")
 
   useEffect(() => {
-    fetchPlans()
-  }, [])
+    let isMounted = true // ✅ prevent state update after unmount
 
-  const fetchPlans = async () => {
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from("payment_plans")
-        .select("*")
-        .eq("is_active", true)
-        .order("price_inr", { ascending: true })
+    const fetchPlans = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from("payment_plans")
+          .select("*")
+          .eq("is_active", true)
+          .order("price_inr", { ascending: true })
 
-      if (error) throw error
-      setPlans(data || [])
-    } catch (error) {
-      console.error("Error fetching plans:", error)
-    } finally {
-      setLoading(false)
+        if (error) throw error
+        if (isMounted) setPlans(data || [])
+      } catch (error) {
+        if (isMounted) console.error("Error fetching plans:", error)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
     }
-  }
+
+    fetchPlans()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const creditPlans = plans.filter((plan) => plan.plan_type === "one_time")
   const subscriptionPlans = plans.filter((plan) => plan.plan_type === "subscription")
-
-  const handlePurchase = async (planId: string) => {
-    // TODO: Implement Razorpay payment flow
-    console.log("Purchase plan:", planId)
-  }
 
   if (loading) {
     return (
@@ -60,7 +61,9 @@ export default function PricingPage() {
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">Choose Your UPSC Credits</h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">
+            Choose Your UPSC Credits
+          </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-pretty">
             Flexible credit packages and subscription plans to power your UPSC preparation journey.
           </p>
@@ -241,7 +244,7 @@ export default function PricingPage() {
                         {Math.round(
                           ((subscriptionPlans[0]?.price_inr * 12 - plan.price_inr) /
                             (subscriptionPlans[0]?.price_inr * 12)) *
-                            100,
+                            100
                         )}
                         % vs Monthly
                       </div>
