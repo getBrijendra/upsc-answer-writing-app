@@ -38,25 +38,24 @@ export default function LoginPage() {
     }
   }
 
-const handleGoogleLogin = async () => {
-  if (isLoading) return // prevent re-renders breaking PKCE
-  setIsLoading(true)
-  setError(null)
-
-  try {
+  const handleGoogleLogin = async () => {
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // 👈 EXACT URL
-      },
-    })
-    if (error) throw error
-  } catch (error: any) {
-    setError(error.message || "An error occurred")
-    setIsLoading(false)
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+        },
+      })
+      if (error) throw error
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred")
+      setIsLoading(false)
+    }
   }
-}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 p-4 relative overflow-hidden">

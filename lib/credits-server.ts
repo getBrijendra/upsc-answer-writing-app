@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 
 export interface CreditOperation {
   operation_type: "answer_review" | "quiz_generation" | "essay_review" | "daily_question_review"

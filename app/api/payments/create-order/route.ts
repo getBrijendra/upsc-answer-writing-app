@@ -1,32 +1,31 @@
-// app/api/payments/create-order/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import Razorpay from "razorpay"
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
+const Razorpay = require("razorpay")
 
 export async function POST(request: NextRequest) {
   try {
     const { planId } = await request.json()
+
     if (!planId) {
       return NextResponse.json({ error: "Plan ID is required" }, { status: 400 })
     }
 
-    // Get the Bearer token (if passed)
-    const authHeader = request.headers.get("authorization")
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined
-
-    const supabase = await createClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get user from session
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Authentication required." }, { status: 401 })
+      console.log("[v0] Authentication failed in create-order:", authError)
+      return NextResponse.json({ error: "Authentication required. Please sign in again." }, { status: 401 })
     }
 
-    // Fetch plan
+    console.log("[v0] User authenticated for payment:", user.id)
+
+    // Get plan details
     const { data: plan, error: planError } = await supabase
       .from("payment_plans")
       .select("*")
@@ -38,34 +37,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Plan not found" }, { status: 404 })
     }
 
-    const order = await razorpay.orders.create({
-      amount: plan.price_inr,
+    const razorpayInstance = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_ID,
+      key_secret: process.env.RAZORPAY_SECRET,
+    })
+
+    // Create Razorpay order
+    const orderOptions = {
+      amount: plan.price_inr, // Amount in paise
       currency: "INR",
-      receipt: `order_${user.id.slice(0, 8)}_${Date.now()}`,
+      receipt: `order_${user.id}_${Date.now()}`,
       notes: {
         user_id: user.id,
-        plan_id: plan.id,
+        plan_id: planId,
         plan_name: plan.name,
+        credits: plan.credits.toString(),
       },
-    })
+    }
 
-    await supabase.from("payments").insert({
-      user_id: user.id,
-      plan_id: plan.id,
-      razorpay_order_id: order.id,
-      amount: plan.price_inr,
-      currency: "INR",
-      status: "pending",
-    })
+    const razorpayOrder = await razorpayInstance.orders.create(orderOptions)
+
+    // Store payment record in database
+    const { data: payment, error: paymentError } = await supabase
+      .from("payments")
+      .insert({
+        user_id: user.id,
+        plan_id: planId,
+        razorpay_order_id: razorpayOrder.id,
+        amount: plan.price_inr,
+        currency: "INR",
+        status: "pending",
+      })
+      .select()
+      .single()
+
+    if (paymentError) {
+      console.error("Error creating payment record:", paymentError)
+      return NextResponse.json({ error: "Failed to create payment record" }, { status: 500 })
+    }
+
+    const publicKeyId = process.env.NEXT_PUBLIC_RAZORPAY_ID || ""
 
     return NextResponse.json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      orderId: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      paymentId: payment.id,
+      planName: plan.name,
+      credits: plan.credits,
+      key_id: publicKeyId,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Error creating Razorpay order:", error)
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
   }
 }

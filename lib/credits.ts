@@ -1,5 +1,4 @@
-// lib/credits.ts
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from "@/lib/supabase/client"
 
 export interface CreditOperation {
   operation_type: "answer_review" | "quiz_generation" | "essay_review" | "daily_question_review"
@@ -13,7 +12,7 @@ export async function deductCredits({
   cost,
 }: CreditOperation): Promise<{ success: boolean; remaining_credits?: number; error?: string }> {
   try {
-    const supabase = createClient() //
+    const supabase = createClient()
 
     // Get the cost for this operation if not provided
     let operationCost = cost
@@ -66,12 +65,8 @@ export async function deductCredits({
 
 export async function getUserCredits(user_id: string): Promise<{ credits: number; error?: string }> {
   try {
-    const supabase = await createClient() // ✅ server client
-    const { data, error } = await supabase
-      .from("user_credits")
-      .select("credits")
-      .eq("user_id", user_id)
-      .single()
+    const supabase = createClient()
+    const { data, error } = await supabase.from("user_credits").select("credits").eq("user_id", user_id).single()
 
     if (error || !data) {
       return { credits: 0, error: "Failed to get user credits" }
@@ -86,10 +81,10 @@ export async function getUserCredits(user_id: string): Promise<{ credits: number
 
 export async function addCredits(
   user_id: string,
-  amount: number
+  amount: number,
 ): Promise<{ success: boolean; new_credits?: number; error?: string }> {
   try {
-    const supabase = await createClient() // ✅ server client
+    const supabase = createClient()
 
     // Get current credits
     const { data: userCredits, error: creditsError } = await supabase
