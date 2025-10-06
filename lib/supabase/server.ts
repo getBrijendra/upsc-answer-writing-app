@@ -1,11 +1,11 @@
 // lib/supabase/server.ts
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function createClient(accessToken?: string) {
   const cookieStore = cookies()
 
-  const supabase = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -19,7 +19,7 @@ export async function createClient(accessToken?: string) {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Ignore if called from server component
+            // Ignore errors in read-only contexts (like server components)
           }
         },
       },
@@ -30,6 +30,4 @@ export async function createClient(accessToken?: string) {
       },
     }
   )
-
-  return supabase
 }
