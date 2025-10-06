@@ -1,5 +1,5 @@
 // lib/credits.ts
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/client'
 
 export interface CreditOperation {
   operation_type: "answer_review" | "quiz_generation" | "essay_review" | "daily_question_review"
@@ -13,7 +13,7 @@ export async function deductCredits({
   cost,
 }: CreditOperation): Promise<{ success: boolean; remaining_credits?: number; error?: string }> {
   try {
-    const supabase = await createClient() //
+    const supabase = createClient() //
 
     // Get the cost for this operation if not provided
     let operationCost = cost
