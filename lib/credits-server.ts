@@ -41,3 +41,44 @@ export async function addCreditsServer(
     return { success: false, error: "Unexpected error occurred" }
   }
 }
+
+export async function deductCredits(
+  user_id: string,
+  amount: number,
+): Promise<{ success: boolean; new_credits?: number; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    // Get current credits
+    const { data: userCredits, error: creditsError } = await supabase
+      .from("user_credits")
+      .select("credits")
+      .eq("user_id", user_id)
+      .single()
+
+    if (creditsError || !userCredits) {
+      return { success: false, error: "Failed to get user credits" }
+    }
+
+    // Check if user has enough credits
+    if (userCredits.credits < amount) {
+      return { success: false, error: "Insufficient credits" }
+    }
+
+    // Deduct credits
+    const newCredits = userCredits.credits - amount
+    const { error: updateError } = await supabase
+      .from("user_credits")
+      .update({ credits: newCredits, updated_at: new Date().toISOString() })
+      .eq("user_id", user_id)
+
+    if (updateError) {
+      return { success: false, error: "Failed to deduct credits" }
+    }
+
+    return { success: true, new_credits: newCredits }
+  } catch (error) {
+    console.error("Error deducting credits:", error)
+    return { success: false, error: "Unexpected error occurred" }
+  }
+}

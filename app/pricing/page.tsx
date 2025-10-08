@@ -8,15 +8,26 @@ import { Check, Zap, Crown, Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { formatPrice, type PaymentPlan } from "@/lib/razorpay"
 import PaymentButton from "@/components/payment-button"
+import Link from "next/link"
 
 export default function PricingPage() {
   const [plans, setPlans] = useState<PaymentPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"credits" | "subscription">("credits")
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
     fetchPlans()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    const supabase = createClient()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    setIsAuthenticated(!!session)
+  }
 
   const fetchPlans = async () => {
     try {
@@ -106,67 +117,85 @@ export default function PricingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-start">
               {creditPlans.map((plan, index) => (
                 <Card
                   key={plan.id}
-                  className={`relative transition-all hover:shadow-lg ${
-                    index === 1 ? "border-2 border-accent shadow-lg scale-105" : "border border-border"
+                  className={`relative transition-all hover:shadow-lg h-full flex flex-col ${
+                    index === 1 ? "border-2 border-accent shadow-lg" : "border border-border"
                   }`}
                 >
-                  {index === 1 && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 h-8 flex items-center justify-center">
+                    {index === 1 && (
                       <Badge className="bg-accent text-accent-foreground">
                         <Star className="w-3 h-3 mr-1" />
                         Most Popular
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  <CardHeader className="text-center pb-6">
+                  <CardHeader className="text-center pb-6 pt-8">
                     <CardTitle className="text-xl font-bold text-foreground">{plan.name}</CardTitle>
                     <div className="mt-4">
                       <span className="text-3xl font-bold text-foreground">{formatPrice(plan.price_inr)}</span>
                     </div>
-                    <CardDescription className="mt-2">{plan.description}</CardDescription>
+                    <CardDescription className="mt-2 min-h-[3rem] flex items-center justify-center">
+                      {plan.description}
+                    </CardDescription>
                     <div className="mt-4 p-3 bg-accent/10 rounded-lg">
                       <span className="text-2xl font-bold text-accent">{plan.credits}</span>
                       <span className="text-sm text-muted-foreground ml-1">credits</span>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">AI Answer Reviews</span>
+                  <CardContent className="space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">AI Answer Reviews</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">MCQ Generation</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">Never Expires</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">MCQ Generation</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">Never Expires</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-4">
+                    <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
                       ≈ {Math.round(plan.price_inr / plan.credits)} paise per credit
                     </div>
                   </CardContent>
 
                   <CardFooter className="pt-6">
-                    <PaymentButton
-                      planId={plan.id}
-                      planName={plan.name}
-                      amount={plan.price_inr}
-                      credits={plan.credits}
-                      className={`w-full ${
-                        index === 1
-                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      }`}
-                    >
-                      Purchase Now
-                    </PaymentButton>
+                    {isAuthenticated ? (
+                      <PaymentButton
+                        planId={plan.id}
+                        planName={plan.name}
+                        amount={plan.price_inr}
+                        credits={plan.credits}
+                        className={`w-full ${
+                          index === 1
+                            ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        }`}
+                      >
+                        Purchase Now
+                      </PaymentButton>
+                    ) : (
+                      <Link href="/auth/login" className="w-full">
+                        <Button
+                          className={`w-full ${
+                            index === 1
+                              ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90"
+                          }`}
+                        >
+                          Sign In to Purchase
+                        </Button>
+                      </Link>
+                    )}
                   </CardFooter>
                 </Card>
               ))}
@@ -186,24 +215,24 @@ export default function PricingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
               {subscriptionPlans.map((plan, index) => (
                 <Card
                   key={plan.id}
-                  className={`relative transition-all hover:shadow-lg ${
-                    index === 1 ? "border-2 border-accent shadow-lg scale-105" : "border border-border"
+                  className={`relative transition-all hover:shadow-lg h-full flex flex-col ${
+                    index === 1 ? "border-2 border-accent shadow-lg" : "border border-border"
                   }`}
                 >
-                  {index === 1 && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 h-8 flex items-center justify-center">
+                    {index === 1 && (
                       <Badge className="bg-accent text-accent-foreground">
                         <Crown className="w-3 h-3 mr-1" />
                         Best Value
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  <CardHeader className="text-center pb-6">
+                  <CardHeader className="text-center pb-6 pt-8">
                     <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
                     <div className="mt-4">
                       <span className="text-4xl font-bold text-foreground">{formatPrice(plan.price_inr)}</span>
@@ -211,32 +240,36 @@ export default function PricingPage() {
                         /{plan.subscription_duration_days === 365 ? "year" : "month"}
                       </span>
                     </div>
-                    <CardDescription className="mt-2">{plan.description}</CardDescription>
+                    <CardDescription className="mt-2 min-h-[3rem] flex items-center justify-center">
+                      {plan.description}
+                    </CardDescription>
                     <div className="mt-4 p-3 bg-accent/10 rounded-lg">
                       <span className="text-2xl font-bold text-accent">{plan.credits}</span>
                       <span className="text-sm text-muted-foreground ml-1">credits included</span>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">Unlimited AI Reviews</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">Unlimited MCQ Generation</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">Priority Support</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">Advanced Analytics</span>
+                  <CardContent className="space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">Unlimited AI Reviews</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">Unlimited MCQ Generation</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">Priority Support</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">Advanced Analytics</span>
+                      </div>
                     </div>
                     {plan.subscription_duration_days === 365 && (
-                      <div className="text-xs text-accent font-medium mt-4">
+                      <div className="text-xs text-accent font-medium mt-4 pt-4 border-t border-border">
                         Save{" "}
                         {Math.round(
                           ((subscriptionPlans[0]?.price_inr * 12 - plan.price_inr) /
@@ -249,19 +282,33 @@ export default function PricingPage() {
                   </CardContent>
 
                   <CardFooter className="pt-6">
-                    <PaymentButton
-                      planId={plan.id}
-                      planName={plan.name}
-                      amount={plan.price_inr}
-                      credits={plan.credits}
-                      className={`w-full ${
-                        index === 1
-                          ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      }`}
-                    >
-                      Subscribe Now
-                    </PaymentButton>
+                    {isAuthenticated ? (
+                      <PaymentButton
+                        planId={plan.id}
+                        planName={plan.name}
+                        amount={plan.price_inr}
+                        credits={plan.credits}
+                        className={`w-full ${
+                          index === 1
+                            ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        }`}
+                      >
+                        Subscribe Now
+                      </PaymentButton>
+                    ) : (
+                      <Link href="/auth/login" className="w-full">
+                        <Button
+                          className={`w-full ${
+                            index === 1
+                              ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90"
+                          }`}
+                        >
+                          Sign In to Subscribe
+                        </Button>
+                      </Link>
+                    )}
                   </CardFooter>
                 </Card>
               ))}

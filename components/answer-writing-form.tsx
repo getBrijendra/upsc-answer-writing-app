@@ -9,16 +9,17 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, Send, Loader2, FileText, CheckCircle, Coins, AlertTriangle } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Upload, Send, Loader2, FileText, CheckCircle, Coins, AlertTriangle, Brain } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getUserCredits } from "@/lib/credits"
 
 interface AnswerWritingFormProps {
-  subjectId: string
-  subjectName: string
+  subjects: Array<{ id: string; name: string; description?: string; category?: string }>
 }
 
-export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWritingFormProps) {
+export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) {
+  const [selectedSubject, setSelectedSubject] = useState("")
   const [question, setQuestion] = useState("")
   const [answer, setAnswer] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -27,7 +28,7 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userCredits, setUserCredits] = useState<number>(0)
-  const [creditCost, setCreditCost] = useState<number>(5) // Default cost
+  const [creditCost, setCreditCost] = useState<number>(5)
   const [loadingCredits, setLoadingCredits] = useState(true)
   const router = useRouter()
 
@@ -108,6 +109,12 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!selectedSubject) {
+      setError("Please select a subject")
+      return
+    }
+
     if (!question.trim() || !answer.trim()) {
       setError("Please provide both question and answer")
       return
@@ -131,11 +138,14 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
         throw new Error("User not authenticated")
       }
 
+      const selectedSubjectData = subjects.find((s) => s.id === selectedSubject)
+      const subjectName = selectedSubjectData?.name || "General"
+
       const { data: insertedAnswer, error: insertError } = await supabase
         .from("answers")
         .insert({
           user_id: user.user.id,
-          subject_id: subjectId,
+          subject_id: selectedSubject,
           question: question.trim(),
           answer_text: answer.trim(),
           file_url: uploadedFileUrl,
@@ -187,14 +197,21 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
     }
   }
 
+  const prelimsSubjects = subjects.filter((s) => s.category === "PRELIMS")
+  const mainsSubjects = subjects.filter((s) => s.category === "MAINS")
+  const optionalSubjects = subjects.filter((s) => s.category === "OPTIONAL")
+
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="shadow-xl border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl text-slate-800">Submit Your Answer</CardTitle>
-              <CardDescription>Write your answer for {subjectName} and receive detailed AI feedback</CardDescription>
+              <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
+                <Brain className="w-6 h-6 text-indigo-600" />
+                Submit Your Answer for AI Analysis
+              </CardTitle>
+              <CardDescription>Write your answer and receive detailed AI-powered feedback</CardDescription>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
               <Coins className="w-4 h-4 text-yellow-500" />
@@ -210,13 +227,58 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
                 <span className="font-medium">Insufficient Credits</span>
               </div>
               <p className="text-red-700 mt-1">
-                You need {creditCost} credits for AI feedback, but you only have {userCredits} credits. Please contact
-                admin to add more credits to your account.
+                You need {creditCost} credits for AI feedback, but you only have {userCredits} credits. Please purchase
+                more credits from the pricing page.
               </p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="subject" className="text-slate-700 font-medium">
+                Subject
+              </Label>
+              <Select value={selectedSubject} onValueChange={setSelectedSubject} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {prelimsSubjects.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Prelims</div>
+                      {prelimsSubjects.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {mainsSubjects.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">Mains</div>
+                      {mainsSubjects.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {optionalSubjects.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">
+                        Your Optional Subject
+                      </div>
+                      {optionalSubjects.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="question" className="text-slate-700 font-medium">
                 Question
@@ -318,7 +380,7 @@ export default function AnswerWritingForm({ subjectId, subjectName }: AnswerWrit
             <Button
               type="submit"
               className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-              disabled={isSubmitting || userCredits < creditCost}
+              disabled={isSubmitting || userCredits < creditCost || !selectedSubject}
             >
               {isSubmitting ? (
                 <>

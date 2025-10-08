@@ -26,7 +26,8 @@ export default function Navigation() {
     { href: "/mcq", label: "MCQ Generator", icon: Brain },
     { href: "/progress", label: "Progress", icon: BarChart3 },
     { href: "/profile", label: "Profile", icon: User },
-    { href: "/essay-writing", label: "Essay Writing", icon: FileText },
+    { href: "/essay-writing", label: "Daily Q", icon: FileText },
+    { href: "/essay-practice", label: "Essay Practice", icon: PenTool },
     { href: "/pricing", label: "Buy Credits", icon: User },
   ]
 

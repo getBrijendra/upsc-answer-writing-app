@@ -1,56 +1,70 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, Clock, FileText, PenTool, CheckCircle, AlertCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Clock, PenTool, Upload, Loader2, CheckCircle, Bell } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
-interface DailyQuestion {
+interface FreeQuestion {
   id: string
   question: string
-  published_date: string
   difficulty_level: "Easy" | "Medium" | "Hard"
-  subject_name: string
   word_limit: number
   time_limit: number
-  is_completed: boolean
 }
 
+const DEMO_QUESTIONS: FreeQuestion[] = [
+  {
+    id: "demo-1",
+    question:
+      "Discuss the role of technology in transforming India's agricultural sector. What are the challenges in implementing digital agriculture?",
+    difficulty_level: "Medium",
+    word_limit: 250,
+    time_limit: 20,
+  },
+  {
+    id: "demo-2",
+    question:
+      "Analyze the impact of climate change on India's coastal regions. Suggest measures to build climate resilience in these areas.",
+    difficulty_level: "Hard",
+    word_limit: 300,
+    time_limit: 25,
+  },
+  {
+    id: "demo-3",
+    question:
+      "What is the significance of the National Education Policy 2020 in shaping India's future? Discuss its key features and implementation challenges.",
+    difficulty_level: "Easy",
+    word_limit: 200,
+    time_limit: 15,
+  },
+]
+
 export default function EssayWritingPage() {
-  const [dailyQuestions, setDailyQuestions] = useState<DailyQuestion[]>([])
-  const [selectedQuestion, setSelectedQuestion] = useState<DailyQuestion | null>(null)
+  const [freeQuestions, setFreeQuestions] = useState<FreeQuestion[]>([])
+  const [selectedQuestion, setSelectedQuestion] = useState("")
   const [answer, setAnswer] = useState("")
+  const [file, setFile] = useState<File | null>(null)
+  const [uploadedContent, setUploadedContent] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
-  const [isTimerActive, setIsTimerActive] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    fetchDailyQuestions()
+    fetchFreeQuestions()
   }, [])
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isTimerActive && timeRemaining && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev && prev <= 1) {
-            setIsTimerActive(false)
-            return 0
-          }
-          return prev ? prev - 1 : 0
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isTimerActive, timeRemaining])
-
-  const fetchDailyQuestions = async () => {
+  const fetchFreeQuestions = async () => {
     try {
       const supabase = createClient()
       const {
@@ -64,100 +78,127 @@ export default function EssayWritingPage() {
 
       const { data: questions, error } = await supabase
         .from("daily_questions")
-        .select(`
-          *,
-          subjects(name)
-        `)
+        .select("*")
         .eq("is_active", true)
         .order("published_date", { ascending: false })
-        .limit(10)
+        .limit(3)
 
       if (error) {
-        console.error("Error fetching daily questions:", error)
-        setDailyQuestions([])
+        console.error("Error fetching questions:", error)
+        setFreeQuestions(DEMO_QUESTIONS)
         return
       }
 
-      // Check which questions user has already attempted
-      const { data: attempts } = await supabase
-        .from("user_daily_attempts")
-        .select("daily_question_id")
-        .eq("user_id", user.id)
-
-      const attemptedIds = new Set(attempts?.map((a) => a.daily_question_id) || [])
-
-      const questionsWithCompletion =
+      const formattedQuestions =
         questions?.map((q) => ({
           id: q.id,
           question: q.question,
-          published_date: q.published_date,
           difficulty_level: q.difficulty_level as "Easy" | "Medium" | "Hard",
-          subject_name: q.subjects?.name || "General",
           word_limit: q.word_limit,
           time_limit: q.time_limit,
-          is_completed: attemptedIds.has(q.id),
         })) || []
 
-      setDailyQuestions(questionsWithCompletion)
+      setFreeQuestions(formattedQuestions.length > 0 ? formattedQuestions : DEMO_QUESTIONS)
     } catch (error) {
       console.error("Error:", error)
-      setDailyQuestions([])
+      setFreeQuestions(DEMO_QUESTIONS)
     } finally {
       setLoading(false)
     }
   }
 
-  const startWriting = (question: DailyQuestion) => {
+  const handleQuestionClick = (question: string) => {
     setSelectedQuestion(question)
-    setAnswer("")
-    setTimeRemaining(question.time_limit * 60) // Convert minutes to seconds
-    setIsTimerActive(true)
+    setError(null)
   }
 
-  const submitAnswer = async () => {
-    if (!selectedQuestion || !answer.trim()) return
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+      setUploadedContent(null)
+    }
+  }
+
+  const handleFileUpload = async () => {
+    if (!file) return
+
+    setIsUploading(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Upload failed")
+      }
+
+      setUploadedContent(result.extractedText || "File uploaded successfully")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Upload failed")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!selectedQuestion.trim() || !answer.trim()) {
+      setError("Please select a question and write your answer")
+      return
+    }
 
     setIsSubmitting(true)
+    setError(null)
+
     try {
       const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) return
-
-      const { error } = await supabase.from("user_daily_attempts").insert({
-        user_id: user.id,
-        daily_question_id: selectedQuestion.id,
-        answer_text: answer,
-        credits_used: 0, // Will be updated when AI review is requested
-      })
-
-      if (error) {
-        console.error("Error submitting answer:", error)
-        alert("Failed to submit answer")
-        return
+      if (!user) {
+        throw new Error("User not authenticated")
       }
 
-      // Update question as completed
-      setDailyQuestions((prev) => prev.map((q) => (q.id === selectedQuestion.id ? { ...q, is_completed: true } : q)))
+      const response = await fetch("/api/generate-feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: selectedQuestion,
+          answer: answer.trim(),
+          attachedFile: uploadedContent,
+        }),
+      })
 
-      setSelectedQuestion(null)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit answer")
+      }
+
+      // Reset form
+      setSelectedQuestion("")
       setAnswer("")
-      setIsTimerActive(false)
-      setTimeRemaining(null)
-    } catch (error) {
-      console.error("Error submitting answer:", error)
-      alert("Failed to submit answer")
+      setFile(null)
+      setUploadedContent(null)
+
+      alert("Answer submitted successfully! Check your profile for feedback.")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -183,107 +224,7 @@ export default function EssayWritingPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading daily questions...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (selectedQuestion) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedQuestion(null)
-                  setIsTimerActive(false)
-                  setAnswer("")
-                }}
-                className="hover:bg-gray-100"
-              >
-                ← Back to Questions
-              </Button>
-
-              {timeRemaining !== null && (
-                <div
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    timeRemaining < 300 ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
-                  }`}
-                >
-                  <Clock className="w-4 h-4" />
-                  <span className="font-mono text-lg">{formatTime(timeRemaining)}</span>
-                </div>
-              )}
-            </div>
-
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">{selectedQuestion.question}</CardTitle>
-                  <Badge className={getDifficultyColor(selectedQuestion.difficulty_level)}>
-                    {selectedQuestion.difficulty_level}
-                  </Badge>
-                </div>
-                <CardDescription className="flex items-center gap-4 text-sm">
-                  <span className="flex items-center gap-1">
-                    <FileText className="w-4 h-4" />
-                    {selectedQuestion.subject_name}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <PenTool className="w-4 h-4" />
-                    {selectedQuestion.word_limit} words
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {selectedQuestion.time_limit} minutes
-                  </span>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Your Answer</CardTitle>
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`text-sm ${
-                        wordCount > selectedQuestion.word_limit
-                          ? "text-red-600"
-                          : wordCount > selectedQuestion.word_limit * 0.9
-                            ? "text-yellow-600"
-                            : "text-gray-600"
-                      }`}
-                    >
-                      {wordCount} / {selectedQuestion.word_limit} words
-                    </span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Start writing your answer here..."
-                  className="min-h-[400px] text-base leading-relaxed resize-none"
-                  disabled={timeRemaining === 0}
-                />
-
-                <div className="flex justify-end mt-4">
-                  <Button
-                    onClick={submitAnswer}
-                    disabled={!answer.trim() || isSubmitting || timeRemaining === 0}
-                    className="bg-black text-white hover:bg-gray-800"
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Answer"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <p className="text-gray-600">Loading questions...</p>
         </div>
       </div>
     )
@@ -292,84 +233,182 @@ export default function EssayWritingPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-black mb-2">Daily Essay Writing</h1>
-            <p className="text-gray-600">
-              Practice answer writing with daily questions. Build your writing skills and improve your UPSC preparation.
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-black mb-2"> Daily Free Answer-Writing Questions</h1>
+          <p className="text-gray-600 text-lg">Practice with free questions and improve your answer writing skills</p>
+        </div>
 
-          <div className="grid gap-6">
-            {dailyQuestions.map((question) => (
-              <Card key={question.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-500">
-                          {new Date(question.published_date).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </span>
-                        {question.is_completed && <CheckCircle className="w-4 h-4 text-green-600" />}
+        <div className="max-w-4xl mx-auto">
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
+                <PenTool className="w-6 h-6 text-indigo-600" />
+                Write Your Answer
+              </CardTitle>
+              <CardDescription>
+                Select a free question below or write your own question to practice answer writing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-700 font-medium">Free Practice Questions (Click to select)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 bg-transparent"
+                      onClick={() => router.push("/pricing")}
+                    >
+                      <Bell className="w-4 h-4" />
+                      Subscribe for Daily Questions
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {freeQuestions.map((q, index) => (
+                      <Card
+                        key={q.id}
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          selectedQuestion === q.question ? "ring-2 ring-indigo-500 bg-indigo-50" : "hover:bg-slate-50"
+                        }`}
+                        onClick={() => handleQuestionClick(q.question)}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-semibold text-indigo-600">Question {index + 1}</span>
+                                <Badge className={getDifficultyColor(q.difficulty_level)}>{q.difficulty_level}</Badge>
+                              </div>
+                              <p className="text-sm text-slate-700">{q.question}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <PenTool className="w-3 h-3" />
+                                  {q.word_limit} words
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {q.time_limit} minutes
+                                </span>
+                              </div>
+                            </div>
+                            {selectedQuestion === q.question && (
+                              <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                            )}
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="question" className="text-slate-700 font-medium">
+                    Question
+                  </Label>
+                  <Textarea
+                    id="question"
+                    placeholder="Click a free question above or write your own question here..."
+                    value={selectedQuestion}
+                    onChange={(e) => setSelectedQuestion(e.target.value)}
+                    className="min-h-[100px] resize-none"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="answer" className="text-slate-700 font-medium">
+                    Your Answer
+                  </Label>
+                  <Textarea
+                    id="answer"
+                    placeholder="Write your answer here..."
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    className="min-h-[300px] resize-none"
+                    required
+                  />
+                  <div className="text-sm text-slate-500">Word count: {wordCount}</div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="file" className="text-slate-700 font-medium">
+                    Attach Supporting Document (Optional)
+                  </Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                        className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                      />
+                      {file && !uploadedContent && (
+                        <Button
+                          type="button"
+                          onClick={handleFileUpload}
+                          disabled={isUploading}
+                          size="sm"
+                          className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 mr-2" />
+                              Process File
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+
+                    {file && uploadedContent && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-sm text-green-800 mb-2 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          File processed successfully!
+                        </p>
+                        <p className="text-xs text-green-700">Preview: {uploadedContent.substring(0, 200)}...</p>
                       </div>
-                      <CardTitle className="text-lg mb-2">{question.question}</CardTitle>
-                      <CardDescription className="flex items-center gap-4 text-sm">
-                        <span className="flex items-center gap-1">
-                          <FileText className="w-4 h-4" />
-                          {question.subject_name}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <PenTool className="w-4 h-4" />
-                          {question.word_limit} words
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {question.time_limit} minutes
-                        </span>
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getDifficultyColor(question.difficulty_level)}>
-                        {question.difficulty_level}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-end">
-                    {question.is_completed ? (
-                      <Button variant="outline" disabled className="text-green-600 bg-transparent">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Completed
-                      </Button>
-                    ) : (
-                      <Button onClick={() => startWriting(question)} className="bg-black text-white hover:bg-gray-800">
-                        <PenTool className="w-4 h-4 mr-2" />
-                        Start Writing
-                      </Button>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
-          {dailyQuestions.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No questions available</h3>
-                <p className="text-gray-600">
-                  Daily questions will appear here. Check back tomorrow for new practice questions.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+                    <p className="text-xs text-slate-500">
+                      Upload reference materials, diagrams, or additional context (Max 10MB)
+                    </p>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting Answer...
+                    </>
+                  ) : (
+                    <>
+                      <PenTool className="w-4 h-4 mr-2" />
+                      Submit Answer for Review
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

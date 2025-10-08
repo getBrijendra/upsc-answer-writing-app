@@ -26,24 +26,41 @@ export default function PaymentButton({ planId, planName, amount, credits, class
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const [supabase] = useState(() => createClient())
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   useEffect(() => {
-    const refreshSession = async () => {
-      const { error } = await supabase.auth.refreshSession()
-      if (error) {
-        console.error("[v0] Session refresh error:", error)
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session) {
+        setIsAuthenticated(true)
+        // Only refresh if session exists
+        const { error } = await supabase.auth.refreshSession()
+        if (error) {
+          console.error("[v0] Session refresh error:", error.message)
+        }
+      } else {
+        setIsAuthenticated(false)
       }
     }
-    refreshSession()
+    checkAuth()
   }, [supabase])
 
   const handlePayment = async () => {
     try {
       setLoading(true)
 
-      const { error: refreshError } = await supabase.auth.refreshSession()
-      if (refreshError) {
-        console.error("[v0] Session refresh failed:", refreshError)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session) {
+        const { error: refreshError } = await supabase.auth.refreshSession()
+        if (refreshError) {
+          console.error("[v0] Session refresh failed:", refreshError.message)
+        }
       }
 
       const {
@@ -52,7 +69,6 @@ export default function PaymentButton({ planId, planName, amount, credits, class
       } = await supabase.auth.getUser()
 
       if (authError || !user) {
-        console.error("[v0] Auth check failed:", authError)
         toast({
           title: "Authentication Required",
           description: "Please sign in to purchase credits.",
@@ -122,7 +138,7 @@ export default function PaymentButton({ planId, planName, amount, credits, class
 
             const { error: postPaymentRefreshError } = await supabase.auth.refreshSession()
             if (postPaymentRefreshError) {
-              console.error("[v0] Post-payment session refresh failed:", postPaymentRefreshError)
+              console.error("[v0] Post-payment session refresh failed:", postPaymentRefreshError.message)
             }
 
             const {
@@ -227,8 +243,8 @@ export default function PaymentButton({ planId, planName, amount, credits, class
   }
 
   return (
-    <Button onClick={handlePayment} disabled={loading} className={className}>
-      {loading ? "Processing..." : children}
+    <Button onClick={handlePayment} disabled={loading || !isAuthenticated} className={className}>
+      {loading ? "Processing..." : isAuthenticated === false ? "Sign In to Pay" : children}
     </Button>
   )
 }
