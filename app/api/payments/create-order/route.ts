@@ -5,6 +5,11 @@ const Razorpay = require("razorpay")
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_ID || !process.env.RAZORPAY_SECRET) {
+      console.error("[v0] Razorpay credentials not configured")
+      return NextResponse.json({ error: "Payment system not configured. Please contact support." }, { status: 500 })
+    }
+
     const { planId } = await request.json()
 
     if (!planId) {
@@ -34,13 +39,23 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (planError || !plan) {
+      console.error("[v0] Plan not found:", planError)
       return NextResponse.json({ error: "Plan not found" }, { status: 404 })
     }
 
-    const razorpayInstance = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_ID,
-      key_secret: process.env.RAZORPAY_SECRET,
-    })
+    let razorpayInstance
+    try {
+      razorpayInstance = new Razorpay({
+        key_id: process.env.NEXT_PUBLIC_RAZORPAY_ID,
+        key_secret: process.env.RAZORPAY_SECRET,
+      })
+    } catch (razorpayError) {
+      console.error("[v0] Razorpay initialization failed:", razorpayError)
+      return NextResponse.json(
+        { error: "Payment gateway initialization failed. Please try again later." },
+        { status: 500 },
+      )
+    }
 
     // Create Razorpay order
     const orderOptions = {
@@ -55,7 +70,13 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    const razorpayOrder = await razorpayInstance.orders.create(orderOptions)
+    let razorpayOrder
+    try {
+      razorpayOrder = await razorpayInstance.orders.create(orderOptions)
+    } catch (razorpayError) {
+      console.error("[v0] Razorpay order creation failed:", razorpayError)
+      return NextResponse.json({ error: "Failed to create payment order. Please try again." }, { status: 500 })
+    }
 
     // Store payment record in database
     const { data: payment, error: paymentError } = await supabase
@@ -72,7 +93,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (paymentError) {
-      console.error("Error creating payment record:", paymentError)
+      console.error("[v0] Error creating payment record:", paymentError)
       return NextResponse.json({ error: "Failed to create payment record" }, { status: 500 })
     }
 
@@ -88,7 +109,10 @@ export async function POST(request: NextRequest) {
       key_id: publicKeyId,
     })
   } catch (error) {
-    console.error("Error creating Razorpay order:", error)
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+    console.error("[v0] Unexpected error in create-order:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "An unexpected error occurred" },
+      { status: 500 },
+    )
   }
 }

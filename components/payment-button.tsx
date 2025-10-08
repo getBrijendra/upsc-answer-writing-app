@@ -93,8 +93,18 @@ export default function PaymentButton({ planId, planName, amount, credits, class
       })
 
       if (!orderResponse.ok) {
-        const errorData = await orderResponse.json()
-        console.error("[v0] Order creation failed:", errorData)
+        let errorMessage = "Failed to create order"
+        try {
+          const errorData = await orderResponse.json()
+          errorMessage = errorData.error || errorMessage
+          console.error("[v0] Order creation failed:", errorData)
+        } catch (jsonError) {
+          // Response is not JSON, try to get text
+          const errorText = await orderResponse.text()
+          errorMessage = errorText || errorMessage
+          console.error("[v0] Order creation failed with non-JSON response:", errorText)
+        }
+
         if (orderResponse.status === 401) {
           toast({
             title: "Session Expired",
@@ -104,7 +114,7 @@ export default function PaymentButton({ planId, planName, amount, credits, class
           window.location.href = "/auth/login"
           return
         }
-        throw new Error(errorData.error || "Failed to create order")
+        throw new Error(errorMessage)
       }
 
       const orderData = await orderResponse.json()
