@@ -32,6 +32,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getUserCredits } from "@/lib/credits"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Topic {
   title: string
@@ -89,6 +90,7 @@ export default function EssayPracticePage() {
   const [userCredits, setUserCredits] = useState<number>(0)
   const [creditCost, setCreditCost] = useState<number>(8)
   const [loadingCredits, setLoadingCredits] = useState(true)
+  const [language, setLanguage] = useState("english")
 
   useEffect(() => {
     const fetchCreditsInfo = async () => {
@@ -265,6 +267,7 @@ export default function EssayPracticePage() {
         body: JSON.stringify({
           topic: selectedTopic.title,
           essay: essayContent,
+          language: language,
         }),
       })
 
@@ -527,6 +530,21 @@ export default function EssayPracticePage() {
                       {uploadedEssay.name}
                     </div>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="language" className="text-slate-700 font-medium">
+                    Language
+                  </Label>
+                  <Select value={language} onValueChange={setLanguage} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="hindi">Hindi (हिंदी)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {error && (

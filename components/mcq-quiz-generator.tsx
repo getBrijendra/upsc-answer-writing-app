@@ -44,6 +44,7 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
 
   // Quiz configuration
   const [selectedSubject, setSelectedSubject] = useState("")
+  const [language, setLanguage] = useState("english")
   const [difficulty, setDifficulty] = useState("medium")
   const [numQuestions, setNumQuestions] = useState("5")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -124,6 +125,7 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
           numQuestions: Number.parseInt(numQuestions),
           difficulty,
           subject: selectedSubject,
+          language: language,
         }),
       })
 
@@ -364,6 +366,19 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
                         ))}
                       </>
                     )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Language</Label>
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="hindi">Hindi (हिंदी)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

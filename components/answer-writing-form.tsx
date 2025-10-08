@@ -20,6 +20,7 @@ interface AnswerWritingFormProps {
 
 export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) {
   const [selectedSubject, setSelectedSubject] = useState("")
+  const [language, setLanguage] = useState("english")
   const [question, setQuestion] = useState("")
   const [answer, setAnswer] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -149,6 +150,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
           question: question.trim(),
           answer_text: answer.trim(),
           file_url: uploadedFileUrl,
+          language: language,
         })
         .select()
         .single()
@@ -164,6 +166,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
           question: question.trim(),
           answer: answer.trim(),
           subject: subjectName,
+          language: language,
         }),
       })
 
@@ -233,39 +236,56 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="subject" className="text-slate-700 font-medium">
-                Subject
-              </Label>
-              <Select value={selectedSubject} onValueChange={setSelectedSubject} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mainsSubjects.length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Mains</div>
-                      {mainsSubjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                  {optionalSubjects.length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">
-                        Your Optional Subject
-                      </div>
-                      {optionalSubjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-slate-700 font-medium">
+                  Subject
+                </Label>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mainsSubjects.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Mains</div>
+                        {mainsSubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {optionalSubjects.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">
+                          Your Optional Subject
+                        </div>
+                        {optionalSubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="language" className="text-slate-700 font-medium">
+                  Language
+                </Label>
+                <Select value={language} onValueChange={setLanguage} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="hindi">Hindi (हिंदी)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">

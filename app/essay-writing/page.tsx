@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Clock, PenTool, Upload, Loader2, CheckCircle, Bell } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 
 interface FreeQuestion {
   id: string
@@ -51,6 +52,7 @@ const DEMO_QUESTIONS: FreeQuestion[] = [
 export default function EssayWritingPage() {
   const [freeQuestions, setFreeQuestions] = useState<FreeQuestion[]>([])
   const [selectedQuestion, setSelectedQuestion] = useState("")
+  const [language, setLanguage] = useState("english")
   const [answer, setAnswer] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [uploadedContent, setUploadedContent] = useState<string | null>(null)
@@ -178,6 +180,7 @@ export default function EssayWritingPage() {
           question: selectedQuestion,
           answer: answer.trim(),
           attachedFile: uploadedContent,
+          language: language,
         }),
       })
 
@@ -316,6 +319,21 @@ export default function EssayWritingPage() {
                     className="min-h-[100px] resize-none"
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="language" className="text-slate-700 font-medium">
+                    Language
+                  </Label>
+                  <Select value={language} onValueChange={setLanguage} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="hindi">Hindi (हिंदी)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
