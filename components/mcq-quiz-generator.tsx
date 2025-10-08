@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client"
 interface Subject {
   id: string
   name: string
+  category?: string
 }
 
 interface MCQQuestion {
@@ -207,6 +208,10 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
 
   const currentQuestion = questions[currentQuestionIndex]
 
+  const prelimsSubjects = subjects.filter((s) => s.category === "PRELIMS")
+  const mainsSubjects = subjects.filter((s) => s.category === "MAINS")
+  const optionalSubjects = subjects.filter((s) => s.category === "OPTIONAL")
+
   return (
     <div className="max-w-4xl mx-auto">
       {!contentReady && !questions.length && (
@@ -338,11 +343,39 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No specific subject</SelectItem>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
+
+                    {prelimsSubjects.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Prelims</div>
+                        {prelimsSubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+
+                    {mainsSubjects.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Mains</div>
+                        {mainsSubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+
+                    {optionalSubjects.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Optional</div>
+                        {optionalSubjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
