@@ -15,18 +15,13 @@ export default function PageLoader() {
 
     const minTimer = setTimeout(() => {
       minTimeElapsed = true
-      if (pageReady) {
-        setLoading(false)
-      }
-    }, 800) // Increased from 500ms to 800ms
+      if (pageReady) setLoading(false)
+    }, 800)
 
     const checkPageReady = () => {
-      // Wait for DOM to be ready and a bit more time for React hydration
       if (document.readyState === "complete") {
         pageReady = true
-        if (minTimeElapsed) {
-          setLoading(false)
-        }
+        if (minTimeElapsed) setLoading(false)
       }
     }
 
@@ -36,7 +31,7 @@ export default function PageLoader() {
 
     const maxTimer = setTimeout(() => {
       setLoading(false)
-    }, 3000) // Maximum 3 seconds
+    }, 7000)
 
     return () => {
       clearTimeout(minTimer)
@@ -50,7 +45,7 @@ export default function PageLoader() {
 
   return (
     <div className="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
-      <div className="relative">
+      <div className="relative flex flex-col items-center justify-center">
         {/* Outer rotating ring */}
         <div className="w-20 h-20 rounded-full border-4 border-gray-200 border-t-black animate-spin"></div>
 
@@ -63,10 +58,20 @@ export default function PageLoader() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-4 h-4 rounded-full bg-black"></div>
         </div>
-      </div>
 
-      {/* Loading text */}
-      <div className="absolute mt-32 text-sm font-medium text-gray-600 animate-pulse">Loading...</div>
+        {/* Brand Text */}
+        <div className="absolute mt-28 text-3xl font-extrabold tracking-[0.3em] text-gray-900 flex space-x-1 animate-pulse">
+          {"LEMURA".split("").map((letter, index) => (
+            <span
+              key={index}
+              className="inline-block animate-bounce"
+              style={{ animationDelay: `${index * 0.15}s` }}
+            >
+              {letter}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
