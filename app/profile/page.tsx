@@ -2,9 +2,12 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { User, Calendar, BookOpen, TrendingUp, Filter, Settings, GraduationCap } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { User, Calendar, BookOpen, TrendingUp, Filter, Settings, GraduationCap, Brain } from "lucide-react"
 import AnswerHistoryFilters from "@/components/answer-history-filters"
 import AnswerHistoryGrid from "@/components/answer-history-grid"
+import MCQHistoryGrid from "@/components/mcq-history-grid"
+import MCQStatsCards from "@/components/mcq-stats-cards"
 import Link from "next/link"
 
 export default async function ProfilePage({
@@ -23,7 +26,6 @@ export default async function ProfilePage({
   // Get user profile with optional subject
   const { data: profile } = await supabase.from("profiles").select("*, subjects(name)").eq("id", data.user.id).single()
 
-  // Get user statistics
   const { data: totalAnswers } = await supabase
     .from("answers")
     .select("id", { count: "exact" })
@@ -68,6 +70,48 @@ export default async function ProfilePage({
 
   const { data: answers } = await answersQuery
 
+  const { data: mcqAttempts } = await supabase
+    .from("user_mcq_attempts")
+    .select(`
+      *,
+      mcq_questions (
+        question,
+        correct_answer,
+        explanation,
+        subjects (
+          name
+        )
+      )
+    `)
+    .eq("user_id", data.user.id)
+    .order("attempted_at", { ascending: false })
+
+  const totalMCQAttempts = mcqAttempts?.length || 0
+  const correctMCQAttempts = mcqAttempts?.filter((a) => a.is_correct).length || 0
+  const mcqAccuracy = totalMCQAttempts > 0 ? Math.round((correctMCQAttempts / totalMCQAttempts) * 100) : 0
+
+  const recentMCQAttempts = mcqAttempts?.slice(0, 10) || []
+  const recentCorrect = recentMCQAttempts.filter((a) => a.is_correct).length
+  const recentMCQAccuracy =
+    recentMCQAttempts.length > 0 ? Math.round((recentCorrect / recentMCQAttempts.length) * 100) : 0
+
+  const mcqSubjectStats = mcqAttempts?.reduce((acc: any, attempt: any) => {
+    const subjectName = attempt.mcq_questions?.subjects?.name || "General"
+    if (!acc[subjectName]) {
+      acc[subjectName] = { total: 0, correct: 0 }
+    }
+    acc[subjectName].total += 1
+    if (attempt.is_correct) acc[subjectName].correct += 1
+    return acc
+  }, {})
+
+  const mcqSubjectData = Object.entries(mcqSubjectStats || {}).map(([name, data]: [string, any]) => ({
+    subject: name,
+    total: data.total,
+    correct: data.correct,
+    accuracy: Math.round((data.correct / data.total) * 100),
+  }))
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
@@ -105,71 +149,110 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-white border border-gray-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-black">Total Answers</CardTitle>
-                  <BookOpen className="w-5 h-5 text-black" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-black">{totalAnswers?.length || 0}</div>
-                <p className="text-sm text-gray-600">Submitted so far</p>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="essays" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+              <TabsTrigger value="essays">Essay Writing</TabsTrigger>
+              <TabsTrigger value="mcq">MCQ Practice</TabsTrigger>
+            </TabsList>
 
-            <Card className="bg-white border border-gray-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-black">Average Score</CardTitle>
-                  <TrendingUp className="w-5 h-5 text-black" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-black">{averageScore}</div>
-                <p className="text-sm text-gray-600">Out of 100</p>
-              </CardContent>
-            </Card>
+            <TabsContent value="essays">
+              {/* Essay Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">Total Answers</CardTitle>
+                      <BookOpen className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">{totalAnswers?.length || 0}</div>
+                    <p className="text-sm text-gray-600">Submitted so far</p>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-white border border-gray-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg text-black">This Month</CardTitle>
-                  <Calendar className="w-5 h-5 text-black" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-black">
-                  {answers?.filter((answer) => {
-                    const answerDate = new Date(answer.created_at)
-                    const now = new Date()
-                    return answerDate.getMonth() === now.getMonth() && answerDate.getFullYear() === now.getFullYear()
-                  }).length || 0}
-                </div>
-                <p className="text-sm text-gray-600">Answers submitted</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">Average Score</CardTitle>
+                      <TrendingUp className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">{averageScore}</div>
+                    <p className="text-sm text-gray-600">Out of 100</p>
+                  </CardContent>
+                </Card>
 
-        {/* Answer History Section */}
-        <Card className="mb-8 bg-white border border-gray-200">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl text-black">Answer History</CardTitle>
-                <CardDescription className="text-gray-600">Review and filter your previous submissions</CardDescription>
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">This Month</CardTitle>
+                      <Calendar className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">
+                      {answers?.filter((answer) => {
+                        const answerDate = new Date(answer.created_at)
+                        const now = new Date()
+                        return (
+                          answerDate.getMonth() === now.getMonth() && answerDate.getFullYear() === now.getFullYear()
+                        )
+                      }).length || 0}
+                    </div>
+                    <p className="text-sm text-gray-600">Answers submitted</p>
+                  </CardContent>
+                </Card>
               </div>
-              <Filter className="w-5 h-5 text-gray-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <AnswerHistoryFilters subjects={subjects || []} currentFilters={params} />
-            <AnswerHistoryGrid answers={answers || []} />
-          </CardContent>
-        </Card>
+
+              {/* Answer History Section */}
+              <Card className="mb-8 bg-white border border-gray-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl text-black">Answer History</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Review and filter your previous submissions
+                      </CardDescription>
+                    </div>
+                    <Filter className="w-5 h-5 text-gray-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AnswerHistoryFilters subjects={subjects || []} currentFilters={params} />
+                  <AnswerHistoryGrid answers={answers || []} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="mcq">
+              <div className="mb-8">
+                <MCQStatsCards
+                  totalAttempts={totalMCQAttempts}
+                  accuracy={mcqAccuracy}
+                  recentAccuracy={recentMCQAccuracy}
+                  subjectData={mcqSubjectData}
+                />
+              </div>
+
+              <Card className="mb-8 bg-white border border-gray-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl text-black">MCQ Attempt History</CardTitle>
+                      <CardDescription className="text-gray-600">Review your MCQ practice sessions</CardDescription>
+                    </div>
+                    <Brain className="w-5 h-5 text-gray-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <MCQHistoryGrid attempts={mcqAttempts || []} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   )

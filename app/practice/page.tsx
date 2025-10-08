@@ -16,14 +16,13 @@ export default async function PracticePage() {
     .eq("id", data.user.id)
     .single()
 
-  const { data: prelimsMainsSubjects } = await supabase
+  const { data: mainsSubjects } = await supabase
     .from("subjects")
     .select("*")
-    .in("category", ["PRELIMS", "MAINS"])
-    .order("category", { ascending: true })
+    .eq("category", "MAINS")
     .order("name", { ascending: true })
 
-  let subjects = prelimsMainsSubjects || []
+  let subjects = mainsSubjects || []
 
   if (profile?.optional_subject_id) {
     const { data: optionalSubject } = await supabase
@@ -43,7 +42,7 @@ export default async function PracticePage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-2">Answer Writing Practice</h1>
           <p className="text-gray-600 text-lg">
-            Practice with Prelims, Mains{profile?.optional_subject_id ? ", and your Optional subject" : ""}
+            Practice with Mains{profile?.optional_subject_id ? " and your Optional subject" : ""}
           </p>
         </div>
 

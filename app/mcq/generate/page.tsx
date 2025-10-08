@@ -36,14 +36,13 @@ export default async function GenerateMCQPage() {
     .eq("id", data.user.id)
     .single()
 
-  const { data: prelimsMainsSubjects } = await supabase
+  const { data: mainsSubjects } = await supabase
     .from("subjects")
     .select("*")
-    .in("category", ["PRELIMS", "MAINS"])
-    .order("category", { ascending: true })
+    .eq("category", "MAINS")
     .order("name", { ascending: true })
 
-  let subjects = prelimsMainsSubjects || []
+  let subjects = mainsSubjects || []
 
   if (profile?.optional_subject_id) {
     const { data: optionalSubject } = await supabase
@@ -63,8 +62,8 @@ export default async function GenerateMCQPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-black mb-2">Generate MCQ Questions</h1>
           <p className="text-gray-600 text-lg">
-            Create practice questions from your study materials for Prelims, Mains
-            {profile?.optional_subject_id ? ", and your Optional subject" : ""}
+            Create practice questions from your study materials for Mains
+            {profile?.optional_subject_id ? " and your Optional subject" : ""}
           </p>
         </div>
 

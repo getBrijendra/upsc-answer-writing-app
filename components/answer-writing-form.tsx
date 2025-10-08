@@ -197,7 +197,6 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
     }
   }
 
-  const prelimsSubjects = subjects.filter((s) => s.category === "PRELIMS")
   const mainsSubjects = subjects.filter((s) => s.category === "MAINS")
   const optionalSubjects = subjects.filter((s) => s.category === "OPTIONAL")
 
@@ -243,19 +242,9 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                   <SelectValue placeholder="Select a subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {prelimsSubjects.length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Prelims</div>
-                      {prelimsSubjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
                   {mainsSubjects.length > 0 && (
                     <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">Mains</div>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Mains</div>
                       {mainsSubjects.map((subject) => (
                         <SelectItem key={subject.id} value={subject.id}>
                           {subject.name}

@@ -208,7 +208,6 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
 
   const currentQuestion = questions[currentQuestionIndex]
 
-  const prelimsSubjects = subjects.filter((s) => s.category === "PRELIMS")
   const mainsSubjects = subjects.filter((s) => s.category === "MAINS")
   const optionalSubjects = subjects.filter((s) => s.category === "OPTIONAL")
 
@@ -343,17 +342,6 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No specific subject</SelectItem>
-
-                    {prelimsSubjects.length > 0 && (
-                      <>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Prelims</div>
-                        {prelimsSubjects.map((subject) => (
-                          <SelectItem key={subject.id} value={subject.id}>
-                            {subject.name}
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
 
                     {mainsSubjects.length > 0 && (
                       <>
