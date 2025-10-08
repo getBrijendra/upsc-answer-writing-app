@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const orderOptions = {
       amount: plan.price_inr, // Amount in paise
       currency: "INR",
-      receipt: `order_${user.id}_${Date.now()}`,
+      receipt: `ord_${user.id.slice(0, 8)}_${Date.now()}`,
       notes: {
         user_id: user.id,
         plan_id: planId,
@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
         credits: plan.credits.toString(),
       },
     }
-
     let razorpayOrder
     try {
       razorpayOrder = await razorpayInstance.orders.create(orderOptions)
