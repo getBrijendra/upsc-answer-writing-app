@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,7 +18,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Brain, Upload, LinkIcon, FileText, Loader2, CheckCircle, Sparkles, PenLine } from "lucide-react"
+import {
+  Brain,
+  Upload,
+  LinkIcon,
+  FileText,
+  Loader2,
+  CheckCircle,
+  Sparkles,
+  PenLine,
+  Coins,
+  AlertTriangle,
+} from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { getUserCredits } from "@/lib/credits"
 
 interface Topic {
   title: string
@@ -73,6 +86,41 @@ export default function EssayPracticePage() {
   const [essay, setEssay] = useState("")
   const [uploadedEssay, setUploadedEssay] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [userCredits, setUserCredits] = useState<number>(0)
+  const [creditCost, setCreditCost] = useState<number>(8)
+  const [loadingCredits, setLoadingCredits] = useState(true)
+
+  useEffect(() => {
+    const fetchCreditsInfo = async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const { credits } = await getUserCredits(user.id)
+          setUserCredits(credits)
+
+          const { data: costData } = await supabase
+            .from("credit_costs")
+            .select("cost")
+            .eq("operation_type", "essay_review")
+            .single()
+
+          if (costData) {
+            setCreditCost(costData.cost)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching credits info:", error)
+      } finally {
+        setLoadingCredits(false)
+      }
+    }
+
+    fetchCreditsInfo()
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -179,6 +227,13 @@ export default function EssayPracticePage() {
       return
     }
 
+    if (userCredits < creditCost) {
+      setError(
+        `Insufficient credits. You need ${creditCost} credits for AI analysis, but you only have ${userCredits} credits.`,
+      )
+      return
+    }
+
     setIsGenerating(true)
     setError(null)
 
@@ -216,7 +271,15 @@ export default function EssayPracticePage() {
       const result = await response.json()
 
       if (!response.ok) {
+        if (result.insufficient_credits) {
+          setError(`Insufficient credits. You need ${creditCost} credits for AI analysis.`)
+          return
+        }
         throw new Error(result.error || "Failed to analyze essay")
+      }
+
+      if (result.remaining_credits !== undefined) {
+        setUserCredits(result.remaining_credits)
       }
 
       alert("Essay submitted successfully! Check your profile for AI analysis.")
@@ -253,11 +316,34 @@ export default function EssayPracticePage() {
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black mb-2">Essay Writing Practice</h1>
-          <p className="text-gray-600 text-lg">Select a topic or write your own to practice essay writing</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-black mb-2">Essay Writing Practice</h1>
+              <p className="text-gray-600 text-lg">Select a topic or write your own to practice essay writing</p>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+              <Coins className="w-5 h-5 text-yellow-500" />
+              <span className="text-lg font-medium">{loadingCredits ? "..." : userCredits}</span>
+            </div>
+          </div>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-6">
+          {!loadingCredits && userCredits < creditCost && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-red-800">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span className="font-medium">Insufficient Credits</span>
+                </div>
+                <p className="text-red-700 mt-1">
+                  You need {creditCost} credits for AI essay analysis, but you only have {userCredits} credits. Please
+                  purchase more credits from the pricing page.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-xl border-0">
             <CardHeader>
               <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
@@ -450,7 +536,7 @@ export default function EssayPracticePage() {
                 <Button
                   onClick={handleSubmitEssay}
                   className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-                  disabled={isGenerating}
+                  disabled={isGenerating || userCredits < creditCost}
                 >
                   {isGenerating ? (
                     <>
@@ -460,7 +546,7 @@ export default function EssayPracticePage() {
                   ) : (
                     <>
                       <Brain className="w-4 h-4 mr-2" />
-                      Submit for AI Analysis (5 Credits)
+                      Submit for AI Analysis ({creditCost} Credits)
                     </>
                   )}
                 </Button>

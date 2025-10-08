@@ -19,10 +19,19 @@ export async function POST(req: Request) {
       return Response.json({ error: "Topic and essay are required" }, { status: 400 })
     }
 
-    // Deduct credits for AI analysis
-    const deductResult = await deductCredits(user.id, 5)
-    if (!deductResult.success) {
-      return Response.json({ error: deductResult.error }, { status: 400 })
+    const creditResult = await deductCredits({
+      operation_type: "essay_review",
+      user_id: user.id,
+    })
+
+    if (!creditResult.success) {
+      return Response.json(
+        {
+          error: creditResult.error || "Failed to process payment",
+          insufficient_credits: creditResult.error === "Insufficient credits",
+        },
+        { status: 402 },
+      )
     }
 
     const { text } = await generateText({
@@ -58,7 +67,10 @@ Be constructive and specific in your feedback.`,
       console.error("Error storing analysis:", insertError)
     }
 
-    return Response.json({ analysis: text })
+    return Response.json({
+      analysis: text,
+      remaining_credits: creditResult.remaining_credits,
+    })
   } catch (error) {
     console.error("Error analyzing essay:", error)
     return Response.json({ error: "Failed to analyze essay" }, { status: 500 })

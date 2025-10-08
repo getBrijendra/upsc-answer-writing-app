@@ -20,9 +20,7 @@ export default function HomePage() {
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-6 text-balance leading-tight">
             Master UPSC with
-            <span className="block mt-2 bg-gradient-to-r from-foreground via-muted-foreground to-foreground bg-clip-text text-transparent">
-              Ai-Powered Buddy
-            </span>
+            <span className="block mt-2 text-foreground">Ai-Powered Buddy</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto text-pretty leading-relaxed">
@@ -32,7 +30,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/auth/signup">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-semibold">
+              <Button className="bg-primary text-primary-foreground hover:opacity-90 px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-semibold">
                 Start Free Trial
               </Button>
             </Link>
@@ -176,28 +174,20 @@ export default function HomePage() {
         <div className="bg-primary text-primary-foreground rounded-3xl p-12 md:p-16 mb-24 shadow-2xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="transform hover:scale-110 transition-transform duration-300">
-              <div className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
-                10K+
-              </div>
-              <div className="text-muted-foreground text-sm md:text-base">Active Users</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2 text-primary-foreground">10K+</div>
+              <div className="text-sm md:text-base opacity-70">Active Users</div>
             </div>
             <div className="transform hover:scale-110 transition-transform duration-300">
-              <div className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
-                500K+
-              </div>
-              <div className="text-muted-foreground text-sm md:text-base">Answers Analyzed</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2 text-primary-foreground">500K+</div>
+              <div className="text-sm md:text-base opacity-70">Answers Analyzed</div>
             </div>
             <div className="transform hover:scale-110 transition-transform duration-300">
-              <div className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
-                95%
-              </div>
-              <div className="text-muted-foreground text-sm md:text-base">Success Rate</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2 text-primary-foreground">95%</div>
+              <div className="text-sm md:text-base opacity-70">Success Rate</div>
             </div>
             <div className="transform hover:scale-110 transition-transform duration-300">
-              <div className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary-foreground to-muted-foreground bg-clip-text text-transparent">
-                4.9/5
-              </div>
-              <div className="text-muted-foreground text-sm md:text-base">User Rating</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2 text-primary-foreground">4.9/5</div>
+              <div className="text-sm md:text-base opacity-70">User Rating</div>
             </div>
           </div>
         </div>
@@ -255,14 +245,14 @@ export default function HomePage() {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center bg-gradient-to-br from-secondary to-background rounded-3xl p-12 md:p-16 border-2 border-border shadow-xl">
+        <div className="text-center bg-secondary rounded-3xl p-12 md:p-16 border-2 border-border shadow-xl">
           <Award className="w-16 h-16 text-primary mx-auto mb-6" />
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Ready to Ace UPSC Mains?</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join thousands of successful aspirants who transformed their preparation with Lemura's AI-powered platform.
           </p>
           <Link href="/auth/signup">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-12 py-6 text-xl rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-semibold">
+            <Button className="bg-primary text-primary-foreground hover:opacity-90 px-12 py-6 text-xl rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-semibold">
               Start Your Free Trial
             </Button>
           </Link>

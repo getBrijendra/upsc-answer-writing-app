@@ -42,12 +42,28 @@ export async function addCreditsServer(
   }
 }
 
-export async function deductCredits(
-  user_id: string,
-  amount: number,
-): Promise<{ success: boolean; new_credits?: number; error?: string }> {
+export async function deductCredits({
+  operation_type,
+  user_id,
+  cost,
+}: CreditOperation): Promise<{ success: boolean; remaining_credits?: number; error?: string }> {
   try {
     const supabase = await createClient()
+
+    // Get the cost for this operation if not provided
+    let operationCost = cost
+    if (!operationCost) {
+      const { data: costData, error: costError } = await supabase
+        .from("credit_costs")
+        .select("cost")
+        .eq("operation_type", operation_type)
+        .single()
+
+      if (costError || !costData) {
+        return { success: false, error: "Failed to get operation cost" }
+      }
+      operationCost = costData.cost
+    }
 
     // Get current credits
     const { data: userCredits, error: creditsError } = await supabase
@@ -61,12 +77,12 @@ export async function deductCredits(
     }
 
     // Check if user has enough credits
-    if (userCredits.credits < amount) {
+    if (userCredits.credits < operationCost) {
       return { success: false, error: "Insufficient credits" }
     }
 
     // Deduct credits
-    const newCredits = userCredits.credits - amount
+    const newCredits = userCredits.credits - operationCost
     const { error: updateError } = await supabase
       .from("user_credits")
       .update({ credits: newCredits, updated_at: new Date().toISOString() })
@@ -76,7 +92,7 @@ export async function deductCredits(
       return { success: false, error: "Failed to deduct credits" }
     }
 
-    return { success: true, new_credits: newCredits }
+    return { success: true, remaining_credits: newCredits }
   } catch (error) {
     console.error("Error deducting credits:", error)
     return { success: false, error: "Unexpected error occurred" }
