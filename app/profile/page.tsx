@@ -175,7 +175,7 @@ export default async function ProfilePage({
 
           <Tabs defaultValue="essays" className="w-full">
             <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-              <TabsTrigger value="essays">Essay Writing</TabsTrigger>
+              <TabsTrigger value="essays">Answer Writing</TabsTrigger>
               <TabsTrigger value="mcq">MCQ Practice</TabsTrigger>
               <TabsTrigger value="saved">Saved Items</TabsTrigger>
             </TabsList>
