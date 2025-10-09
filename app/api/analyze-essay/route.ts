@@ -22,6 +22,7 @@ export async function POST(req: Request) {
     const creditResult = await deductCredits({
       operation_type: "essay_review",
       user_id: user.id,
+      cost: 7,
     })
 
     if (!creditResult.success) {

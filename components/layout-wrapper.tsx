@@ -48,7 +48,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     pathname === "/about" ||
     pathname === "/contact" ||
     pathname === "/privacy" ||
-    pathname === "/terms"
+    pathname === "/terms" ||
+    pathname === "/blogs" // Added /blogs as a public page
 
   // Show public header for: public pages OR pricing page when not authenticated
   const shouldShowPublicHeader = isPublicPage || (pathname === "/pricing" && !isAuthenticated)

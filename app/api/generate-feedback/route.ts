@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { deductCredits } from "@/lib/credits"
+import { deductCredits } from "@/lib/credits-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const creditResult = await deductCredits({
       operation_type: "answer_review",
       user_id: user.id,
+      cost: 6,
     })
 
     if (!creditResult.success) {

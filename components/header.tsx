@@ -15,6 +15,7 @@ export default function Header({ showAuth = true }: HeaderProps) {
   const publicNavItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
+    { href: "/blogs", label: "Blogs" },
     { href: "/pricing", label: "Pricing" },
   ]
 

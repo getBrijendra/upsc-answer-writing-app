@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { deductCredits } from "@/lib/credits"
+import { deductCredits } from "@/lib/credits-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,9 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Content and number of questions are required" }, { status: 400 })
     }
 
+    const totalCost = Number.parseInt(numQuestions)
     const creditResult = await deductCredits({
       operation_type: "quiz_generation",
       user_id: user.id,
+      cost: totalCost,
     })
 
     if (!creditResult.success) {

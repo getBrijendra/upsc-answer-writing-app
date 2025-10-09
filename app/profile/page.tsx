@@ -3,11 +3,23 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Calendar, BookOpen, TrendingUp, Filter, Settings, GraduationCap, Brain } from "lucide-react"
+import {
+  User,
+  Calendar,
+  BookOpen,
+  TrendingUp,
+  Filter,
+  Settings,
+  GraduationCap,
+  Brain,
+  Network,
+  Layers,
+} from "lucide-react"
 import AnswerHistoryFilters from "@/components/answer-history-filters"
 import AnswerHistoryGrid from "@/components/answer-history-grid"
 import MCQHistoryGrid from "@/components/mcq-history-grid"
 import MCQStatsCards from "@/components/mcq-stats-cards"
+import SavedItemsGrid from "@/components/saved-items-grid"
 import Link from "next/link"
 
 export default async function ProfilePage({
@@ -112,6 +124,18 @@ export default async function ProfilePage({
     accuracy: Math.round((data.correct / data.total) * 100),
   }))
 
+  const { data: mindmaps } = await supabase
+    .from("mindmaps")
+    .select("*")
+    .eq("user_id", data.user.id)
+    .order("created_at", { ascending: false })
+
+  const { data: flashcardSets } = await supabase
+    .from("flashcard_sets")
+    .select("*")
+    .eq("user_id", data.user.id)
+    .order("created_at", { ascending: false })
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
@@ -150,9 +174,10 @@ export default async function ProfilePage({
           </div>
 
           <Tabs defaultValue="essays" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
               <TabsTrigger value="essays">Essay Writing</TabsTrigger>
               <TabsTrigger value="mcq">MCQ Practice</TabsTrigger>
+              <TabsTrigger value="saved">Saved Items</TabsTrigger>
             </TabsList>
 
             <TabsContent value="essays">
@@ -250,6 +275,48 @@ export default async function ProfilePage({
                   <MCQHistoryGrid attempts={mcqAttempts || []} />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="saved">
+              <div className="space-y-8">
+                {/* Mindmaps Section */}
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-2xl text-black flex items-center gap-2">
+                          <Network className="w-6 h-6" />
+                          Saved Mindmaps
+                        </CardTitle>
+                        <CardDescription className="text-gray-600">
+                          Your interactive mindmap visualizations
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <SavedItemsGrid items={mindmaps || []} type="mindmap" />
+                  </CardContent>
+                </Card>
+
+                {/* Flashcards Section */}
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-2xl text-black flex items-center gap-2">
+                          <Layers className="w-6 h-6" />
+                          Saved Flashcard Sets
+                        </CardTitle>
+                        <CardDescription className="text-gray-600">Your Q&A flashcard collections</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <SavedItemsGrid items={flashcardSets || []} type="flashcard" />
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

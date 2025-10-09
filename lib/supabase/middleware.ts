@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = ["/", "/about", "/pricing", "/privacy", "/terms", "/contact"]
   const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth")
+  const isBlogRoute = request.nextUrl.pathname.startsWith("/blogs")
 
-  if (!user && !isPublicRoute && !isAuthRoute) {
+  if (!user && !isPublicRoute && !isAuthRoute && !isBlogRoute) {
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     return NextResponse.redirect(url)
