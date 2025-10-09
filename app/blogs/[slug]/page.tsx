@@ -4,23 +4,24 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, TrendingUp, BookOpen, Newspaper, ArrowLeft, Share2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { demoBlogPosts } from "@/lib/blog-data"
 
-export default async function BlogDetailPage({ params }: { params: { slug: string } }) {
+export const dynamic = "force-dynamic"
+
+export default async function BlogDetailPage({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  const { slug } = params
+
   const supabase = await createClient()
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const response = await fetch(`http://localhost:3000/api/blogs?slug=${params.slug}`, {
-    cache: "no-store",
-  })
-
-  if (!response.ok) {
-    redirect("/blogs")
-  }
-
-  const post = await response.json()
+  const post = demoBlogPosts.find((p) => p.slug === slug)
+  if (!post) redirect("/blogs")
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -48,25 +49,17 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
     }
   }
 
-  const formatCategory = (category: string) => {
-    return category
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section with Featured Image */}
+      {/* Hero Section */}
       <div className="relative h-[400px] w-full overflow-hidden">
         <img src={post.image || "/placeholder.svg"} alt={post.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       </div>
 
-      {/* Article Content */}
+      {/* Article */}
       <article className="container mx-auto px-4 -mt-32 relative z-10">
         <div className="max-w-4xl mx-auto">
-          {/* Back Button */}
           <Link href="/blogs">
             <Button variant="ghost" className="mb-6 hover:bg-muted">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -74,11 +67,10 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
             </Button>
           </Link>
 
-          {/* Article Header */}
           <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
             <Badge className={`${getCategoryColor(post.category)} mb-4`}>
               {getCategoryIcon(post.category)}
-              <span className="ml-1">{formatCategory(post.category)}</span>
+              <span className="ml-1 capitalize">{post.category.replace("_", " ")}</span>
             </Badge>
 
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">{post.title}</h1>
@@ -111,24 +103,22 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
             </div>
           </div>
 
-          {/* Article Body */}
+          {/* Content */}
           <div className="bg-card rounded-lg shadow-lg p-8 mb-8">
             <div
-              className="prose prose-lg max-w-none
-                prose-headings:text-foreground prose-headings:font-bold
-                prose-h2:text-3xl prose-h2:mt-8 prose-h2:mb-4
-                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
-                prose-strong:text-foreground"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold
+    prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4 prose-strong:text-foreground"
+              dangerouslySetInnerHTML={{ __html: post.excerpt }}
             />
+
           </div>
 
-          {/* CTA Section */}
+          {/* CTA */}
           <div className="bg-muted/30 rounded-lg p-8 text-center mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Ace Your UPSC Preparation?</h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Join thousands of aspirants using AI-powered tools for answer writing practice, MCQ generation, and
-              personalized feedback
+              personalized feedback.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/signup">

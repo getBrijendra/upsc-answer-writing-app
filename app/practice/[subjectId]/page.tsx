@@ -2,8 +2,9 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import AnswerWritingForm from "@/components/answer-writing-form"
 
-export default async function SubjectPracticePage({ params }: { params: Promise<{ subjectId: string }> }) {
-  const { subjectId } = await params
+export default async function SubjectPracticePage({ params }: { params: { subjectId: string } }) {
+  const { subjectId } = params
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
@@ -26,7 +27,10 @@ export default async function SubjectPracticePage({ params }: { params: Promise<
           <p className="text-gray-600 text-lg">Write your answer and get detailed feedback</p>
         </div>
 
-        <AnswerWritingForm subjectId={subjectId} subjectName={subject.name} />
+        <AnswerWritingForm
+  subjects={[{ id: subjectId, name: subject.name, description: subject.description, category: subject.category }]}
+/>
+
       </div>
     </div>
   )
