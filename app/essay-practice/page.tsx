@@ -156,7 +156,14 @@ export default function EssayPracticePage() {
           body: formData,
         })
 
-        const uploadResult = await uploadResponse.json()
+        let uploadResult
+        try {
+          uploadResult = await uploadResponse.json()
+        } catch (jsonError) {
+          console.error("[v0] Failed to parse upload response as JSON:", jsonError)
+          throw new Error("Server returned an invalid response for file upload")
+        }
+
         if (!uploadResponse.ok) {
           throw new Error(uploadResult.error || "File upload failed")
         }
@@ -251,7 +258,14 @@ export default function EssayPracticePage() {
           body: formData,
         })
 
-        const uploadResult = await uploadResponse.json()
+        let uploadResult
+        try {
+          uploadResult = await uploadResponse.json()
+        } catch (jsonError) {
+          console.error("[v0] Failed to parse upload response as JSON:", jsonError)
+          throw new Error("Server returned an invalid response for file upload")
+        }
+
         if (!uploadResponse.ok) {
           throw new Error(uploadResult.error || "File upload failed")
         }
@@ -271,7 +285,13 @@ export default function EssayPracticePage() {
         }),
       })
 
-      const result = await response.json()
+      let result
+      try {
+        result = await response.json()
+      } catch (jsonError) {
+        console.error("[v0] Failed to parse analyze response as JSON:", jsonError)
+        throw new Error("Server returned an invalid response. Please try again.")
+      }
 
       if (!response.ok) {
         if (result.insufficient_credits) {
@@ -291,6 +311,7 @@ export default function EssayPracticePage() {
       setSelectedTopic(null)
       setCustomTopic("")
     } catch (error: unknown) {
+      console.error("[v0] Error submitting essay:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsGenerating(false)

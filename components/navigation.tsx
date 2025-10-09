@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
@@ -37,9 +38,12 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           <Link
             href="/dashboard"
-            className="text-2xl font-bold text-black hover:text-gray-700 transition-colors cursor-pointer"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            Lemura
+            <div className="flex items-center justify-center rounded-md bg-white">
+              <Image src="/logo/lemura_logo.png" alt="Lemura logo" width={60} height={8} priority />
+            </div>
+            <span className="text-2xl font-bold text-black">Lemura</span>
           </Link>
 
           {/* Desktop Navigation */}

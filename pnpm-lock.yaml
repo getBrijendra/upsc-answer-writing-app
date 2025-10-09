@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@emotion/is-prop-valid':
+        specifier: latest
+        version: 1.4.0
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.60.0(react@19.0.0))
@@ -92,6 +95,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 1.1.6
         version: 1.1.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@rrweb/types':
+        specifier: latest
+        version: 2.0.0-alpha.18
       '@supabase/ssr':
         specifier: latest
         version: 0.7.0(@supabase/supabase-js@2.74.0)
@@ -129,8 +135,8 @@ importers:
         specifier: 8.5.1
         version: 8.5.1(react@19.0.0)
       framer-motion:
-        specifier: ^12.23.22
-        version: 12.23.22(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: latest
+        version: 12.23.22(@emotion/is-prop-valid@1.4.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       geist:
         specifier: ^1.3.1
         version: 1.3.1(next@15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
@@ -147,8 +153,8 @@ importers:
         specifier: latest
         version: 0.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       posthog-js:
-        specifier: ^1.273.1
-        version: 1.273.1
+        specifier: latest
+        version: 1.274.0(@rrweb/types@2.0.0-alpha.18)(rrweb-snapshot@2.0.0-alpha.4)
       razorpay:
         specifier: latest
         version: 2.9.6
@@ -170,6 +176,9 @@ importers:
       recharts:
         specifier: latest
         version: 3.2.1(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react-is@19.2.0)(react@19.0.0)(redux@5.0.1)
+      rrweb-snapshot:
+        specifier: latest
+        version: 2.0.0-alpha.4
       sonner:
         specifier: latest
         version: 2.0.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -242,6 +251,12 @@ packages:
 
   '@emnapi/runtime@1.5.0':
     resolution: {integrity: sha512-97/BJ3iXHww3djw6hYIfErCZFee7qCtrneuLa20UXFCOTCfBM2cvQHjWJ2EG0s0MtdNwInarqCTz35i4wWXHsQ==}
+
+  '@emotion/is-prop-valid@1.4.0':
+    resolution: {integrity: sha512-QgD4fyscGcbbKwJmqNvUMSE02OsHUa+lAWKdEUIJKgqe5IwRSKd7+KhibEWdaKwgjLj0DRSHA9biAIqGBk05lw==}
+
+  '@emotion/memoize@0.9.0':
+    resolution: {integrity: sha512-30FAj7/EoJ5mwVPOWhAyCX+FPfMDrVecJAM+Iw9NRoSl4BBAQeqj4cApHHUXOVvIPgLVDsCFoz/hGD+5QQD1GQ==}
 
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
@@ -440,8 +455,8 @@ packages:
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
-  '@posthog/core@1.2.2':
-    resolution: {integrity: sha512-f16Ozx6LIigRG+HsJdt+7kgSxZTHeX5f1JlCGKI1lXcvlZgfsCR338FuMI2QRYXGl+jg/vYFzGOTQBxl90lnBg==}
+  '@posthog/core@1.2.3':
+    resolution: {integrity: sha512-rm3ULv4xPPCZ1Ek/60+bUZYNVravRcso8fk9zarxSu9ll/WNNdINSUJor04ULqoBADH6kh5O2t8dn9F7Tkj53A==}
 
   '@radix-ui/number@1.1.0':
     resolution: {integrity: sha512-V3gRzhVNU1ldS5XhAPTom1fOIo4ccrjjJgmE+LI2h/WaFpHmx0MQApT+KZHnx8abG6Avtfcz4WoEciMnpFT3HQ==}
@@ -1326,6 +1341,9 @@ packages:
       react-redux:
         optional: true
 
+  '@rrweb/types@2.0.0-alpha.18':
+    resolution: {integrity: sha512-iMH3amHthJZ9x3gGmBPmdfim7wLGygC2GciIkw2A6SO8giSn8PHYtRT8OKNH4V+k3SZ6RSnYHcTQxBA7pSWZ3Q==}
+
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
@@ -2018,8 +2036,8 @@ packages:
     resolution: {integrity: sha512-27VKOqrYfPncKA2NrFOVhP5MGAfHKLYn/Q0mz9cNQyRAKYi3VNHwYU2qKKqPCqgBmeeJ0uAFB56NumXZ5ZReXg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.273.1:
-    resolution: {integrity: sha512-6w3j6nAWJj7W7/iksWLXRpdLrLZrQA8jTsEQ71bvmyw4bwCqhgPfxutrmeoAUNaxot2FB1JHc9Lagslg35h61g==}
+  posthog-js@1.274.0:
+    resolution: {integrity: sha512-z3/Hj6svCXNcdkg+hN/jdrRromDX835V2oqyC+nMC3rV85ubNs4XvjjJ9mzeytbpg7KNqo2cHrd9zwfoQwxNvw==}
     peerDependencies:
       '@rrweb/types': 2.0.0-alpha.17
       rrweb-snapshot: 2.0.0-alpha.17
@@ -2128,6 +2146,9 @@ packages:
 
   reselect@5.1.1:
     resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
+
+  rrweb-snapshot@2.0.0-alpha.4:
+    resolution: {integrity: sha512-KQ2OtPpXO5jLYqg1OnXS/Hf+EzqnZyP5A+XPqBCjYpj3XIje/Od4gdUwjbFo3cVuWq5Cw5Y1d3/xwgIS7/XpQQ==}
 
   scheduler@0.25.0:
     resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
@@ -2330,6 +2351,12 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@emotion/is-prop-valid@1.4.0':
+    dependencies:
+      '@emotion/memoize': 0.9.0
+
+  '@emotion/memoize@0.9.0': {}
+
   '@floating-ui/core@1.7.3':
     dependencies:
       '@floating-ui/utils': 0.2.10
@@ -2472,7 +2499,7 @@ snapshots:
 
   '@opentelemetry/api@1.9.0': {}
 
-  '@posthog/core@1.2.2': {}
+  '@posthog/core@1.2.3': {}
 
   '@radix-ui/number@1.1.0': {}
 
@@ -3359,6 +3386,8 @@ snapshots:
       react: 19.0.0
       react-redux: 9.2.0(@types/react@19.0.0)(react@19.0.0)(redux@5.0.1)
 
+  '@rrweb/types@2.0.0-alpha.18': {}
+
   '@standard-schema/spec@1.0.0': {}
 
   '@standard-schema/utils@0.3.0': {}
@@ -3826,12 +3855,13 @@ snapshots:
 
   fraction.js@4.3.7: {}
 
-  framer-motion@12.23.22(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  framer-motion@12.23.22(@emotion/is-prop-valid@1.4.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       motion-dom: 12.23.21
       motion-utils: 12.23.6
       tslib: 2.8.1
     optionalDependencies:
+      '@emotion/is-prop-valid': 1.4.0
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
@@ -4017,13 +4047,16 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.273.1:
+  posthog-js@1.274.0(@rrweb/types@2.0.0-alpha.18)(rrweb-snapshot@2.0.0-alpha.4):
     dependencies:
-      '@posthog/core': 1.2.2
+      '@posthog/core': 1.2.3
       core-js: 3.45.1
       fflate: 0.4.8
       preact: 10.27.2
       web-vitals: 4.2.4
+    optionalDependencies:
+      '@rrweb/types': 2.0.0-alpha.18
+      rrweb-snapshot: 2.0.0-alpha.4
 
   preact@10.27.2: {}
 
@@ -4123,6 +4156,8 @@ snapshots:
   redux@5.0.1: {}
 
   reselect@5.1.1: {}
+
+  rrweb-snapshot@2.0.0-alpha.4: {}
 
   scheduler@0.25.0: {}
 
