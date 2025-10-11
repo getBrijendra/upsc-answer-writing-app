@@ -51,8 +51,10 @@ export async function deductCredits({
     const supabase = await createClient()
 
     // Get the cost for this operation if not provided
-    let operationCost = cost
-    if (!operationCost) {
+    let operationCost: any
+    if (typeof cost === "number") {
+      operationCost = cost
+    } else {
       const { data: costData, error: costError } = await supabase
         .from("credit_costs")
         .select("cost")
