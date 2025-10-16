@@ -1,28 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, RotateCcw, Save } from "lucide-react"
 import { toast } from "sonner"
+import { useEffect } from "react"
 
 interface Flashcard {
   question: string
   answer: string
 }
 
-export default function FlashcardsPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default function FlashcardsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const [flashcardSet, setFlashcardSet] = useState<any>(null)
-  const [cards, setCards] = useState<Flashcard[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isFlipped, setIsFlipped] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [isSaved, setIsSaved] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const { id } = React.use(params)
+  const [flashcardSet, setFlashcardSet] = React.useState<any>(null)
+  const [cards, setCards] = React.useState<Flashcard[]>([])
+  const [currentIndex, setCurrentIndex] = React.useState(0)
+  const [isFlipped, setIsFlipped] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
+  const [isSaved, setIsSaved] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
 
   useEffect(() => {
     const supabase = createClient()

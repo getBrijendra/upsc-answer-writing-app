@@ -172,7 +172,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
         body: JSON.stringify({
           question: question.trim(),
           answer: answer.trim(),
-          subject: subjectName,
+          subject: selectedSubject,
           language: language,
           file_url: finalFileUrl,
         }),

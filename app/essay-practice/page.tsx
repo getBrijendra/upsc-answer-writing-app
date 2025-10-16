@@ -33,6 +33,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { getUserCredits } from "@/lib/credits"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { uploadToSupabase } from "@/lib/supabase/uploadFile";
 
 interface Topic {
   title: string
@@ -248,29 +249,18 @@ export default function EssayPracticePage() {
 
     try {
       let essayContent = essay
+      let uploadResponseUrl = null
 
       if (uploadedEssay) {
-        const formData = new FormData()
-        formData.append("file", uploadedEssay)
+        const uploadUrl = await uploadToSupabase(uploadedEssay, "user_uploaded_essays")
+        uploadResponseUrl = uploadUrl
+        console.log("File uploaded to:", uploadResponseUrl)
 
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
+        // if (!uploadResponse.ok) {
+        //   throw new Error(uploadResult.error || "File upload failed")
+        // }
 
-        let uploadResult
-        try {
-          uploadResult = await uploadResponse.json()
-        } catch (jsonError) {
-          console.error("[v0] Failed to parse upload response as JSON:", jsonError)
-          throw new Error("Server returned an invalid response for file upload")
-        }
-
-        if (!uploadResponse.ok) {
-          throw new Error(uploadResult.error || "File upload failed")
-        }
-
-        essayContent = uploadResult.extractedText
+        // essayContent = uploadResult.extractedText
       }
 
       const response = await fetch("/api/analyze-essay", {
@@ -282,6 +272,7 @@ export default function EssayPracticePage() {
           topic: selectedTopic.title,
           essay: essayContent,
           language: language,
+          file_url: uploadResponseUrl || null,
         }),
       })
 
