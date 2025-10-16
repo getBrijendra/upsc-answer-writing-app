@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
 
     // --- Parse request body ---
     const { question, answer, subject, language = "english", file_url } = await request.json()
-    // console.log("Received question:", question)
-    // console.log("Received answer:", answer)
-    // console.log("Received subject:", subject)
-    // console.log("Received file_url:", file_url)
+    console.log("Received question:", question)
+    console.log("Received answer:", answer)
+    console.log("Received subject:", subject)
+    console.log("Received file_url:", file_url)
 
     if (!question || !answer) {
       return NextResponse.json({ error: "Question and answer are required" }, { status: 400 })
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       file_url,
     }
 
-    const response = await fetch(process.env.AI_BASE_URL + "/generate-mcq-questions", {
+    const response = await fetch(process.env.AI_BASE_URL + "/generate-feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

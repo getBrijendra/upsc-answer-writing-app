@@ -1,6 +1,7 @@
 import { generateText } from "ai"
 import { createClient } from "@/lib/supabase/server"
 import { deductCredits } from "@/lib/credits-server"
+import { file } from "zod"
 
 const USE_DEMO_RESPONSE = true
 
@@ -15,12 +16,13 @@ export async function POST(req: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    let topic, essay, language
+    let topic, essay, language, file_url
     try {
       const body = await req.json()
       topic = body.topic
       essay = body.essay
       language = body.language || "english"
+      file_url = body.file_url || null
     } catch (parseError) {
       console.error("[v0] Error parsing request body:", parseError)
       return Response.json({ error: "Invalid request body" }, { status: 400 })
