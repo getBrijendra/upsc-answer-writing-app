@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, RotateCcw, Save } from "lucide-react"
 import { toast } from "sonner"
+import { useEffect } from "react"
 
 interface Flashcard {
   question: string
