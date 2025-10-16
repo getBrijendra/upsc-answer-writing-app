@@ -27,7 +27,8 @@ export default async function AnswerFeedbackPage({ params }: { params: Promise<{
     redirect("/dashboard")
   }
 
-  const feedback = answer.feedback as any
+const feedback = answer.feedback?.feedback || answer.feedback || {}
+  // console.log("Feedback data:", feedback)
 
   return (
     <div className="min-h-screen bg-white">
@@ -50,10 +51,10 @@ export default async function AnswerFeedbackPage({ params }: { params: Promise<{
               <CardTitle className="text-2xl">Overall Score</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <div className="text-6xl font-bold text-black mb-2">{answer.score || 0}</div>
+              <div className="text-6xl font-bold text-black mb-2">{feedback.overall_score || 0}</div>
               <div className="text-gray-500 mb-4">out of 100</div>
               <Badge
-                variant={answer.score >= 80 ? "default" : answer.score >= 60 ? "secondary" : "destructive"}
+                variant={feedback.overall_score >= 80 ? "default" : feedback.overall_score >= 60 ? "secondary" : "destructive"}
                 className="text-sm px-3 py-1"
               >
                 {answer.score >= 80 ? "Excellent" : answer.score >= 60 ? "Good" : "Needs Improvement"}
