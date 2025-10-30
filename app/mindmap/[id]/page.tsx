@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useCallback, useEffect, useState } from "react"
+import { use, useCallback, useEffect, useState } from "react"
+import type { MouseEvent as ReactMouseEvent } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -14,6 +13,7 @@ import {
   useEdgesState,
   addEdge,
   type Node,
+  type Edge,
   type Connection,
   BackgroundVariant,
 } from "@xyflow/react"
@@ -27,13 +27,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Save, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 
-export default function MindmapPage({ params }: { params: { id: string } }) {
-  const { id } = params
+type MindmapNodeData = {
+  label: string
+  description?: string
+}
+
+type MindmapNode = Node<MindmapNodeData>
+
+type MindmapEdge = Edge
+
+export default function MindmapPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<MindmapNode>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<MindmapEdge>([])
   const [mindmap, setMindmap] = useState<any>(null)
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [selectedNode, setSelectedNode] = useState<MindmapNode | null>(null)
   const [showNodeDialog, setShowNodeDialog] = useState(false)
   const [showAddNodeDialog, setShowAddNodeDialog] = useState(false)
   const [newNodeLabel, setNewNodeLabel] = useState("")
@@ -89,8 +98,8 @@ export default function MindmapPage({ params }: { params: { id: string } }) {
 
   const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges])
 
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node)
+  const onNodeClick = useCallback((_event: ReactMouseEvent, node: Node) => {
+    setSelectedNode(node as MindmapNode)
     setShowNodeDialog(true)
   }, [])
 
@@ -146,7 +155,7 @@ export default function MindmapPage({ params }: { params: { id: string } }) {
   const handleAddNode = () => {
     if (!newNodeLabel.trim()) return
 
-    const newNode: Node = {
+    const newNode: MindmapNode = {
       id: `node-${Date.now()}`,
       type: "default",
       position: { x: Math.random() * 400, y: Math.random() * 400 },

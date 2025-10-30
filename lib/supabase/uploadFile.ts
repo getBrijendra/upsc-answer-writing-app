@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/client"
 
-export async function uploadToSupabase(file: File, bucketName = "uploads") {
+export async function uploadToSupabase(file: File, bucketName = "user_uploaded_essays") {
   const supabase = createClient()
   const fileExt = file.name.split(".").pop()
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`

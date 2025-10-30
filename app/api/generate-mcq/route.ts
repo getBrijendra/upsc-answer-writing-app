@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { deductCredits } from "@/lib/credits-server"
+import { calculateCreditCost } from "@/lib/modelPricing"
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { content, numQuestions, difficulty, subject, language } = await request.json()
+    // Parse request body
+    const { content, numQuestions, difficulty, subject, language, model_name = "deepseek-chat" } = await request.json()
 
     if (!content || !numQuestions) {
       return NextResponse.json(
@@ -24,22 +26,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const totalCost = Number.parseInt(numQuestions)
-    const creditResult = await deductCredits({
-      operation_type: "quiz_generation",
-      user_id: user.id,
-      cost: totalCost,
-    })
-
-    if (!creditResult.success) {
-      return NextResponse.json(
-        {
-          error: creditResult.error || "Failed to process payment",
-          insufficient_credits: creditResult.error === "Insufficient credits",
-        },
-        { status: 402 },
-      )
-    }
 
     // Call external MCQ generation API (your Python backend)
     const response = await fetch(process.env.AI_BASE_URL + "/generate-mcq-questions", {
@@ -63,6 +49,33 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
+
+    const totalCost = calculateCreditCost({
+      model: model_name,
+      prompt_tokens: data.prompt_tokens,
+      completion_tokens: data.completion_tokens,
+    })
+
+    console.log("Total cost for MCQ generation:", totalCost)
+
+    // Deduct credits from user account
+    const creditResult = await deductCredits({
+      operation_type: "quiz_generation",
+      user_id: user.id,
+      cost: totalCost,
+    })
+
+    console.log("Credit deduction result:", creditResult)
+
+    if (!creditResult.success) {
+      return NextResponse.json(
+        {
+          error: creditResult.error || "Failed to process payment",
+          insufficient_credits: creditResult.error === "Insufficient credits",
+        },
+        { status: 402 },
+      )
+    }
 
     return NextResponse.json({
       success: true,
