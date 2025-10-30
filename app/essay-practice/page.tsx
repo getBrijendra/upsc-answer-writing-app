@@ -33,7 +33,8 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { getUserCredits } from "@/lib/credits"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { uploadToSupabase } from "@/lib/supabase/uploadFile";
+import { uploadToSupabase } from "@/lib/supabase/uploadFile"
+import { useRouter } from "next/navigation"
 
 interface Topic {
   title: string
@@ -89,9 +90,11 @@ export default function EssayPracticePage() {
   const [uploadedEssay, setUploadedEssay] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userCredits, setUserCredits] = useState<number>(0)
-  const [creditCost, setCreditCost] = useState<number>(8)
+  const [creditCost, setCreditCost] = useState<number>(7)
   const [loadingCredits, setLoadingCredits] = useState(true)
   const [language, setLanguage] = useState("english")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchCreditsInfo = async () => {
@@ -244,68 +247,76 @@ export default function EssayPracticePage() {
       return
     }
 
-    setIsGenerating(true)
+    setIsSubmitting(true)
     setError(null)
 
     try {
-      let essayContent = essay
+      const supabase = createClient()
+      const { data: user } = await supabase.auth.getUser()
+
+      if (!user.user) throw new Error("User not authenticated")
+
+      const essayContent = essay
       let uploadResponseUrl = null
 
+      // Upload essay file if provided
       if (uploadedEssay) {
-        const uploadUrl = await uploadToSupabase(uploadedEssay, "user_uploaded_essays")
-        uploadResponseUrl = uploadUrl
-        console.log("File uploaded to:", uploadResponseUrl)
-
-        // if (!uploadResponse.ok) {
-        //   throw new Error(uploadResult.error || "File upload failed")
-        // }
-
-        // essayContent = uploadResult.extractedText
+        uploadResponseUrl = await uploadToSupabase(uploadedEssay, "user_uploaded_essays")
       }
 
-      const response = await fetch("/api/analyze-essay", {
+      // Step 1: Insert essay record
+      const { data: insertedEssay, error: insertError } = await supabase
+        .from("essays")
+        .insert({
+          user_id: user.user.id,
+          topic: selectedTopic.title,
+          essay_text: essayContent.trim(),
+          file_url: uploadResponseUrl || null,
+          language,
+        })
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+
+      // Step 2: Generate feedback
+      const feedbackResponse = await fetch("/api/analyze-essay", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           topic: selectedTopic.title,
-          essay: essayContent,
-          language: language,
+          essay: essayContent.trim(),
+          language,
           file_url: uploadResponseUrl || null,
         }),
       })
 
-      let result
-      try {
-        result = await response.json()
-      } catch (jsonError) {
-        console.error("[v0] Failed to parse analyze response as JSON:", jsonError)
-        throw new Error("Server returned an invalid response. Please try again.")
+      const feedbackResult = await feedbackResponse.json()
+      if (!feedbackResponse.ok) throw new Error(feedbackResult.error || "Failed to generate feedback")
+
+      // Step 3: Update essay with feedback and score
+      await supabase
+        .from("essays")
+        .update({
+          feedback: feedbackResult,
+          score: feedbackResult.feedback?.overall_score || 0,
+        })
+        .eq("id", insertedEssay.id)
+
+      // Update credits display
+      if (feedbackResult.remaining_credits !== undefined) {
+        setUserCredits(feedbackResult.remaining_credits)
       }
 
-      if (!response.ok) {
-        if (result.insufficient_credits) {
-          setError(`Insufficient credits. You need ${creditCost} credits for AI analysis.`)
-          return
-        }
-        throw new Error(result.error || "Failed to analyze essay")
-      }
-
-      if (result.remaining_credits !== undefined) {
-        setUserCredits(result.remaining_credits)
-      }
-
-      alert("Essay submitted successfully! Check your profile for AI analysis.")
-      setEssay("")
-      setUploadedEssay(null)
-      setSelectedTopic(null)
-      setCustomTopic("")
+      // Redirect to essay feedback page
+      router.push(`/essay/${insertedEssay.id}`)
     } catch (error: unknown) {
       console.error("[v0] Error submitting essay:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
-      setIsGenerating(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -566,9 +577,9 @@ export default function EssayPracticePage() {
                 <Button
                   onClick={handleSubmitEssay}
                   className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-                  disabled={isGenerating || userCredits < creditCost}
+                  disabled={isSubmitting || userCredits < creditCost}
                 >
-                  {isGenerating ? (
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Analyzing Essay...

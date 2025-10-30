@@ -21,6 +21,7 @@ import MCQHistoryGrid from "@/components/mcq-history-grid"
 import MCQStatsCards from "@/components/mcq-stats-cards"
 import SavedItemsGrid from "@/components/saved-items-grid"
 import Link from "next/link"
+import EssayHistoryGrid from "@/components/essay-history-grid"
 
 export default async function ProfilePage({
   searchParams,
@@ -81,6 +82,27 @@ export default async function ProfilePage({
   }
 
   const { data: answers } = await answersQuery
+
+  const { data: essays } = await supabase
+    .from("essays")
+    .select("*")
+    .eq("user_id", data.user.id)
+    .order("created_at", { ascending: false })
+
+  const { data: totalEssays } = await supabase
+    .from("essays")
+    .select("id", { count: "exact" })
+    .eq("user_id", data.user.id)
+
+  const { data: essayScores } = await supabase
+    .from("essays")
+    .select("score")
+    .eq("user_id", data.user.id)
+    .not("score", "is", null)
+
+  const essayAverageScore = essayScores?.length
+    ? Math.round(essayScores.reduce((sum, essay) => sum + (essay.score || 0), 0) / essayScores.length)
+    : 0
 
   const { data: mcqAttempts } = await supabase
     .from("user_mcq_attempts")
@@ -173,14 +195,15 @@ export default async function ProfilePage({
             </div>
           </div>
 
-          <Tabs defaultValue="essays" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-              <TabsTrigger value="essays">Answer Writing</TabsTrigger>
+          <Tabs defaultValue="answer-writing" className="w-full">
+            <TabsList className="grid w-full max-w-2xl grid-cols-4">
+              <TabsTrigger value="answer-writing">Answer Writing</TabsTrigger>
+              <TabsTrigger value="essay-practice">Essay Practice</TabsTrigger>
               <TabsTrigger value="mcq">MCQ Practice</TabsTrigger>
               <TabsTrigger value="saved">Saved Items</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="essays">
+            <TabsContent value="answer-writing">
               {/* Essay Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <Card className="bg-white border border-gray-200">
@@ -247,6 +270,74 @@ export default async function ProfilePage({
                 <CardContent>
                   <AnswerHistoryFilters subjects={subjects || []} currentFilters={params} />
                   <AnswerHistoryGrid answers={answers || []} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="essay-practice">
+              {/* Essay Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">Total Essays</CardTitle>
+                      <BookOpen className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">{totalEssays?.length || 0}</div>
+                    <p className="text-sm text-gray-600">Submitted so far</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">Average Score</CardTitle>
+                      <TrendingUp className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">{essayAverageScore}</div>
+                    <p className="text-sm text-gray-600">Out of 100</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg text-black">This Month</CardTitle>
+                      <Calendar className="w-5 h-5 text-black" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-black">
+                      {essays?.filter((essay) => {
+                        const essayDate = new Date(essay.created_at)
+                        const now = new Date()
+                        return essayDate.getMonth() === now.getMonth() && essayDate.getFullYear() === now.getFullYear()
+                      }).length || 0}
+                    </div>
+                    <p className="text-sm text-gray-600">Essays submitted</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Essay History Section */}
+              <Card className="mb-8 bg-white border border-gray-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl text-black">Essay History</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Review your essay submissions and feedback
+                      </CardDescription>
+                    </div>
+                    <Filter className="w-5 h-5 text-gray-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <EssayHistoryGrid essays={essays || []} />
                 </CardContent>
               </Card>
             </TabsContent>
