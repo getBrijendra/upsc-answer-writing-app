@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { deductCredits } from "@/lib/credits-server"
+import { calculateCreditCost } from "@/lib/modelPricing"
 
 const DEMO_MINDMAP = {
   title: "Indian Constitution",
@@ -95,10 +96,36 @@ export async function POST(req: Request) {
       return Response.json({ error: "Content is required" }, { status: 400 })
     }
 
+    const model_name = "deepseek-chat"
+    const payload = { topic: content, model_name, input_type: inputType || "text" }  
+
+    const response = await fetch(process.env.AI_BASE_URL + "/generate-mindmap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error("FastAPI mindmap generation failed:", errorData)
+      return Response.json(
+        { error: "Mindmap generation failed in FastAPI service" },
+        { status: 500 },
+      )
+    }
+
+    let responseData = await response.json()
+    console.log("Mindmap generation response data:", responseData)
+
+    // Fallback to demo mindmap if response data is incomplete
     const creditResult = await deductCredits({
       operation_type: "mindmap_generation" as any,
       user_id: user.id,
-      cost: 5,
+      cost: calculateCreditCost({
+        model: "deepseek-chat",
+        prompt_tokens: responseData.prompt_tokens,
+        completion_tokens: responseData.completion_tokens,
+      }),
     })
 
     if (!creditResult.success) {
@@ -116,11 +143,11 @@ export async function POST(req: Request) {
 
     return Response.json({
       mindmap: {
-        id: `temp-${Date.now()}`, // Temporary ID for unsaved mindmap
-        title: DEMO_MINDMAP.title,
+        id: `temp-${Date.now()}`,
+        title: responseData.title,
         content,
-        nodes: DEMO_MINDMAP.nodes,
-        edges: DEMO_MINDMAP.edges,
+        nodes: responseData.nodes,
+        edges: responseData.edges,
         user_id: user.id,
       },
       remaining_credits: creditResult.remaining_credits,

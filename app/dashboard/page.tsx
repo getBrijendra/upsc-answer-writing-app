@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
+import { uploadToSupabase } from "@/lib/supabase/uploadFile";
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -73,9 +74,9 @@ export default function DashboardPage() {
       else if (inputType === "links") content = mindmapLinks
       else if (inputType === "file" && mindmapFile) {
         // Handle file upload
-        content = "PDF content placeholder"
+        content = await uploadToSupabase(mindmapFile, "user_uploaded_essays");
+        console.log("fileurl", content);
       }
-
       const response = await fetch("/api/generate-mindmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,7 +120,8 @@ export default function DashboardPage() {
       else if (inputType === "links") content = flashcardLinks
       else if (inputType === "file" && flashcardFile) {
         // Handle file upload
-        content = "PDF content placeholder"
+        content = await uploadToSupabase(flashcardFile)
+        console.log("Uploaded flashcard file to:", content)
       }
 
       const response = await fetch("/api/generate-flashcards", {

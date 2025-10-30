@@ -22,11 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Upload,
-  Send,
-  Loader2,
   FileText,
-  CheckCircle,
+  Loader2,
+  Eye,
+  Send,
   Coins,
   AlertTriangle,
   Brain,
@@ -34,6 +33,7 @@ import {
 import { useRouter } from "next/navigation";
 import { getUserCredits } from "@/lib/credits";
 import { uploadToSupabase } from "@/lib/supabase/uploadFile";
+import ExtractedTextModal from "@/components/ExtractedTextModal";
 
 interface AnswerWritingFormProps {
   subjects: Array<{
@@ -49,16 +49,20 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
   const [language, setLanguage] = useState("english");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [fileCache, setFileCache] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [extractedText, setExtractedText] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState<number>(0);
   const [creditCost, setCreditCost] = useState<number>(5);
   const [loadingCredits, setLoadingCredits] = useState(true);
   const router = useRouter();
 
+  // 🔹 Load user credits and operation cost
   useEffect(() => {
     const fetchCreditsInfo = async () => {
       try {
@@ -77,9 +81,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
             .eq("operation_type", "answer_review")
             .single();
 
-          if (costData) {
-            setCreditCost(costData.cost);
-          }
+          if (costData) setCreditCost(costData.cost);
         }
       } catch (error) {
         console.error("Error fetching credits info:", error);
@@ -91,32 +93,83 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
     fetchCreditsInfo();
   }, []);
 
+  // 🔹 Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setUploadedFileUrl(null);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles(newFiles);
+      setUploadedUrls([]);
+      setExtractedText(null);
     }
   };
 
+  // 🔹 Upload & Extract Text
+  const handleFileUploadAndExtract = async () => {
+    if (files.length === 0) return;
+    setError(null);
+
+    const allCached = files.every((file) => fileCache[file.name]);
+
+    if (allCached) {
+      // ✅ All files already processed, use cache
+      const cachedText = Object.values(fileCache).join("\n\n");
+      setExtractedText(cachedText);
+      setShowPreviewModal(true);
+      return;
+    }
+
+    // 🔄 Otherwise, upload + call OCR API
+    setIsUploading(true);
+    try {
+      const supabase = createClient();
+      const urls: string[] = [];
+
+      // Upload each file to Supabase
+      for (const file of files) {
+        const url = await uploadToSupabase(file, "user_uploaded_answers");
+        urls.push(url);
+      }
+
+      // Call the OCR endpoint
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/extract-image-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_urls: urls }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to extract text");
+
+      const text = data.text || "";
+      setUploadedUrls(urls);
+      setExtractedText(text);
+
+      // Cache extracted text
+      const updatedCache = { ...fileCache };
+      for (const file of files) {
+        updatedCache[file.name] = text;
+      }
+      setFileCache(updatedCache);
+
+      setShowPreviewModal(true);
+    } catch (err: any) {
+      setError(err.message || "File upload or processing failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 🔹 Submit Form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedSubject) {
-      setError("Please select a subject");
-      return;
-    }
-
-    if (!question.trim() || !answer.trim()) {
-      setError("Please provide both question and answer");
-      return;
-    }
-
-    if (userCredits < creditCost) {
-      setError(
-        `Insufficient credits. You need ${creditCost} credits for AI feedback, but you only have ${userCredits} credits.`,
+    if (!selectedSubject) return setError("Please select a subject");
+    if (!question.trim() || !answer.trim())
+      return setError("Please provide both question and answer");
+    if (userCredits < creditCost)
+      return setError(
+        `Insufficient credits. You need ${creditCost} credits but only have ${userCredits}.`
       );
-      return;
-    }
 
     setIsSubmitting(true);
     setError(null);
@@ -125,31 +178,9 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
       const supabase = createClient();
       const { data: user } = await supabase.auth.getUser();
 
-      if (!user.user) {
-        throw new Error("User not authenticated");
-      }
+      if (!user.user) throw new Error("User not authenticated");
 
-      // 🟡 Step 1: Upload file first if needed
-      let finalFileUrl = uploadedFileUrl;
-      if (file && !uploadedFileUrl) {
-        setIsUploading(true);
-        try {
-          finalFileUrl = await uploadToSupabase(file, "user_uploaded_answers");
-          setUploadedFileUrl(finalFileUrl);
-        } catch (uploadErr) {
-          console.error("File upload failed:", uploadErr);
-          throw new Error("File upload failed. Please try again.");
-        } finally {
-          setIsUploading(false);
-        }
-      }
-
-      // 🟡 Step 2: Insert answer record
-      const selectedSubjectData = subjects.find(
-        (s) => s.id === selectedSubject
-      );
-      const subjectName = selectedSubjectData?.name || "General";
-
+      // Step 1: Insert answer record
       const { data: insertedAnswer, error: insertError } = await supabase
         .from("answers")
         .insert({
@@ -157,15 +188,15 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
           subject_id: selectedSubject,
           question: question.trim(),
           answer_text: answer.trim(),
-          file_url: finalFileUrl,
-          language: language,
+          file_url: uploadedUrls.join(", "),
+          language,
         })
         .select()
         .single();
 
       if (insertError) throw insertError;
 
-      // 🟡 Step 3: Generate feedback
+      // Step 2: Generate feedback
       const feedbackResponse = await fetch("/api/generate-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -173,24 +204,16 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
           question: question.trim(),
           answer: answer.trim(),
           subject: selectedSubject,
-          language: language,
-          file_url: finalFileUrl,
+          language,
+          file_urls: uploadedUrls,
         }),
       });
 
       const feedbackResult = await feedbackResponse.json();
-
-      if (!feedbackResponse.ok) {
-        if (feedbackResult.insufficient_credits) {
-          setError(
-            `Insufficient credits. You need ${creditCost} credits for AI feedback.`
-          );
-          return;
-        }
+      if (!feedbackResponse.ok)
         throw new Error(feedbackResult.error || "Failed to generate feedback");
-      }
 
-      // 🟡 Step 4: Update feedback in database
+      // Step 3: Update feedback in DB
       await supabase
         .from("answers")
         .update({
@@ -199,14 +222,9 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
         })
         .eq("id", insertedAnswer.id);
 
-      if (feedbackResult.remaining_credits !== undefined) {
-        setUserCredits(feedbackResult.remaining_credits);
-      }
-
-      // 🟡 Step 5: Redirect to answer page
       router.push(`/answer/${insertedAnswer.id}`);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+    } catch (error: any) {
+      setError(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -237,6 +255,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
             </div>
           </div>
         </CardHeader>
+
         <CardContent>
           {!loadingCredits && userCredits < creditCost && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -245,9 +264,8 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                 <span className="font-medium">Insufficient Credits</span>
               </div>
               <p className="text-red-700 mt-1">
-                You need {creditCost} credits for AI feedback, but you only have{" "}
-                {userCredits}. Please purchase more credits from the pricing
-                page.
+                You need {creditCost} credits for AI feedback but only have{" "}
+                {userCredits}. Please purchase more credits.
               </p>
             </div>
           )}
@@ -256,9 +274,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
             {/* Subject & Language */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="subject" className="text-slate-700 font-medium">
-                  Subject
-                </Label>
+                <Label htmlFor="subject">Subject</Label>
                 <Select
                   value={selectedSubject}
                   onValueChange={setSelectedSubject}
@@ -270,7 +286,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                   <SelectContent>
                     {mainsSubjects.length > 0 && (
                       <>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">
+                        <div className="px-2 py-1 text-xs text-gray-500 font-semibold uppercase">
                           Mains
                         </div>
                         {mainsSubjects.map((subject) => (
@@ -282,8 +298,8 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                     )}
                     {optionalSubjects.length > 0 && (
                       <>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase mt-2">
-                          Your Optional Subject
+                        <div className="px-2 py-1 text-xs text-gray-500 font-semibold uppercase mt-2">
+                          Optional
                         </div>
                         {optionalSubjects.map((subject) => (
                           <SelectItem key={subject.id} value={subject.id}>
@@ -297,9 +313,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="language" className="text-slate-700 font-medium">
-                  Language
-                </Label>
+                <Label htmlFor="language">Language</Label>
                 <Select
                   value={language}
                   onValueChange={setLanguage}
@@ -318,31 +332,25 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
 
             {/* Question */}
             <div className="space-y-2">
-              <Label htmlFor="question" className="text-slate-700 font-medium">
-                Question
-              </Label>
+              <Label htmlFor="question">Question</Label>
               <Textarea
                 id="question"
-                placeholder="Enter the UPSC question you're answering..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="min-h-[100px] resize-none"
-                required
+                placeholder="Enter the UPSC question..."
+                className="min-h-[100px]"
               />
             </div>
 
             {/* Answer */}
             <div className="space-y-2">
-              <Label htmlFor="answer" className="text-slate-700 font-medium">
-                Your Answer
-              </Label>
+              <Label htmlFor="answer">Your Answer</Label>
               <Textarea
                 id="answer"
-                placeholder="Write your detailed answer here..."
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                className="min-h-[300px] resize-none"
-                required
+                placeholder="Write your detailed answer..."
+                className="min-h-[300px]"
               />
               <div className="text-sm text-slate-500">
                 Word count:{" "}
@@ -350,47 +358,48 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                   answer
                     .trim()
                     .split(/\s+/)
-                    .filter((word) => word.length > 0).length
+                    .filter((w) => w.length > 0).length
                 }
               </div>
             </div>
 
             {/* File Upload */}
             <div className="space-y-2">
-              <Label htmlFor="file" className="text-slate-700 font-medium">
-                Upload Supporting File (Optional)
-              </Label>
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="file"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                    onChange={handleFileChange}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                  />
+              <Label>Upload Supporting Files</Label>
+              <Input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileChange}
+              />
+              {files.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {files.map((f) => (
+                    <div key={f.name} className="text-sm flex items-center gap-2 text-slate-600">
+                      <FileText className="w-4 h-4" /> {f.name}
+                    </div>
+                  ))}
                 </div>
-
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 p-2 rounded">
-                    <FileText className="w-4 h-4" />
-                    {file.name}
-                    {uploadedFileUrl && (
-                      <div className="flex items-center gap-1 text-green-600 ml-auto">
-                        <CheckCircle className="w-4 h-4" />
-                        Uploaded
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <p className="text-xs text-slate-500">
-                  Supported formats: PDF, DOC, DOCX, TXT, JPG, PNG (Max 10MB)
-                  <br />
-                  Files will be processed to extract text content for better
-                  feedback analysis.
-                </p>
-              </div>
+              )}
+              {files.length > 0 && (
+                <Button
+                  type="button"
+                  onClick={handleFileUploadAndExtract}
+                  disabled={isUploading}
+                  className="mt-2"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing Files...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4 mr-2" /> Preview Extracted Text
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             {error && (
@@ -402,25 +411,28 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
             <Button
               type="submit"
               className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-              disabled={isSubmitting || userCredits < creditCost || !selectedSubject}
+              disabled={isSubmitting || userCredits < creditCost}
             >
-              {(isSubmitting || isUploading) ? (
+              {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {isUploading
-                    ? "Uploading File..."
-                    : "Generating AI Feedback..."}
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Submit Answer for AI Analysis ({creditCost} credits)
+                  <Send className="w-4 h-4 mr-2" /> Submit Answer ({creditCost} credits)
                 </>
               )}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      {/* 🔹 Modal Preview */}
+      <ExtractedTextModal
+        open={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        extractedText={extractedText}
+      />
     </div>
   );
 }
