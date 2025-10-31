@@ -19,7 +19,7 @@ export default async function PracticePage() {
   const { data: mainsSubjects } = await supabase
     .from("subjects")
     .select("*")
-    .eq("category", "MAINS")
+    // .eq("category", "MAINS")
     .order("name", { ascending: true })
 
   let subjects = mainsSubjects || []

@@ -59,14 +59,15 @@ export async function POST(req: Request) {
     }
 
     const { content, inputType } = await req.json()
+    let payload: any = { topic: content, input_type: inputType }
 
-    if (!content?.trim()) {
-      return Response.json({ error: "Content is required" }, { status: 400 })
-    }
+    const topics = await fetch(`${process.env.AI_BASE_URL}/generate-essay-topics`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then((res) => res.json())
 
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    return Response.json({ topics: DEMO_TOPICS })
+    return Response.json(topics)
 
     /* Original AI implementation - commented out for demo mode
     const { object } = await generateObject({

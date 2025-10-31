@@ -90,7 +90,7 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>support@lemura.com</span>
+                <span>techyhutsolutions@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
@@ -105,7 +105,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 Lemura. All rights reserved.</p>
+          <p>&copy; 2025 Lemura. All rights reserved.</p>
         </div>
       </div>
     </footer>

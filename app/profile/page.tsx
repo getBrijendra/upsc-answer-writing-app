@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -146,6 +147,24 @@ export default async function ProfilePage({
     accuracy: Math.round((data.correct / data.total) * 100),
   }))
 
+  const { data: generatedMCQQuestions } = await supabase
+    .from("mcq_questions")
+    .select("*, subjects(name)")
+    .eq("user_id", data.user.id)
+    .order("created_at", { ascending: false })
+
+  const questionsBySubject = (generatedMCQQuestions || []).reduce(
+    (acc: Record<string, any[]>, question: any) => {
+      const subjectName = question.subjects?.name || "General"
+      if (!acc[subjectName]) {
+        acc[subjectName] = []
+      }
+      acc[subjectName].push(question)
+      return acc
+    },
+    {} as Record<string, any[]>
+  )
+
   const { data: mindmaps } = await supabase
     .from("mindmaps")
     .select("*")
@@ -196,11 +215,11 @@ export default async function ProfilePage({
           </div>
 
           <Tabs defaultValue="answer-writing" className="w-full">
-            <TabsList className="grid w-full max-w-2xl grid-cols-4">
+            <TabsList className="grid w-full max-w-3xl grid-cols-4">
               <TabsTrigger value="answer-writing">Answer Writing</TabsTrigger>
               <TabsTrigger value="essay-practice">Essay Practice</TabsTrigger>
               <TabsTrigger value="mcq">MCQ Practice</TabsTrigger>
-              <TabsTrigger value="saved">Saved Items</TabsTrigger>
+              <TabsTrigger value="saved">Mind-Maps & Flash-Cards</TabsTrigger>
             </TabsList>
 
             <TabsContent value="answer-writing">
@@ -356,8 +375,91 @@ export default async function ProfilePage({
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-2xl text-black">MCQ Attempt History</CardTitle>
-                      <CardDescription className="text-gray-600">Review your MCQ practice sessions</CardDescription>
+                      <CardTitle className="text-2xl text-black">Generated Question Library</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Review every MCQ you have created, organized by subject
+                      </CardDescription>
+                    </div>
+                    <BookOpen className="w-5 h-5 text-gray-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {generatedMCQQuestions && generatedMCQQuestions.length > 0 ? (
+                    <div className="space-y-6">
+                      {Object.entries(questionsBySubject).map(([subjectName, subjectQuestions]) => (
+                        <details
+                          key={subjectName}
+                          className="group border border-gray-200 rounded-lg bg-white shadow-sm"
+                        >
+                          <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3">
+                            <span className="text-base font-semibold text-black">{subjectName}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {subjectQuestions.length} {subjectQuestions.length === 1 ? "Question" : "Questions"}
+                            </Badge>
+                          </summary>
+                          <div className="px-4 pb-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              {subjectQuestions.map((question: any) => {
+                                const optionCount = Array.isArray(question.options)
+                                  ? question.options.length
+                                  : question.options && typeof question.options === "object"
+                                  ? Object.keys(question.options).length
+                                  : 0
+
+                                return (
+                                  <Card
+                                    key={question.id}
+                                    className="border border-gray-200 bg-gray-50 hover:shadow-md transition-shadow"
+                                  >
+                                    <CardHeader className="pb-2">
+                                      <CardTitle className="text-sm font-semibold text-black line-clamp-2">
+                                        {question.question}
+                                      </CardTitle>
+                                      <CardDescription className="text-xs text-gray-500">
+                                        {new Date(question.created_at).toLocaleDateString()}
+                                      </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                      <div className="mb-3 text-xs text-gray-600">
+                                        {optionCount > 0 ? `${optionCount} options` : "Options unavailable"}
+                                      </div>
+                                      <Link href={`/mcq/question/${question.id}`}>
+                                        <Button className="w-full bg-black text-white hover:bg-gray-800" size="sm">
+                                          Practice Question
+                                        </Button>
+                                      </Link>
+                                    </CardContent>
+                                  </Card>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">No MCQs generated yet</h3>
+                      <p className="text-gray-500 mb-4">
+                        Generate MCQ questions to build your personal practice library.
+                      </p>
+                      <Link href="/mcq/generate">
+                        <Button className="bg-black text-white hover:bg-gray-800">Generate Questions</Button>
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* <Card className="mb-8 bg-white border border-gray-200">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl text-black">Recent Practice Attempts</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Track how you performed on each question you attempted
+                      </CardDescription>
                     </div>
                     <Brain className="w-5 h-5 text-gray-600" />
                   </div>
@@ -365,7 +467,7 @@ export default async function ProfilePage({
                 <CardContent>
                   <MCQHistoryGrid attempts={mcqAttempts || []} />
                 </CardContent>
-              </Card>
+              </Card> */}
             </TabsContent>
 
             <TabsContent value="saved">

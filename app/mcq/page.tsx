@@ -105,7 +105,7 @@ export default async function MCQPage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow bg-white border border-gray-200">
+          {/* <Card className="hover:shadow-lg transition-shadow bg-white border border-gray-200">
             <CardHeader>
               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                 <BookOpen className="w-6 h-6 text-black" />
@@ -120,11 +120,11 @@ export default async function MCQPage() {
                 <Button className="w-full bg-black text-white hover:bg-gray-800">Start Practice</Button>
               </Link>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Recent Questions */}
-        {recentQuestions && recentQuestions.length > 0 && (
+        {/* {recentQuestions && recentQuestions.length > 0 && (
           <Card className="bg-white border border-gray-200">
             <CardHeader>
               <CardTitle className="text-black">Recently Generated Questions</CardTitle>
@@ -155,7 +155,7 @@ export default async function MCQPage() {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
       </div>
     </div>
   )

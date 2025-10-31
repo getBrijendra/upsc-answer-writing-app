@@ -230,7 +230,7 @@ export default function DashboardPage() {
             </Link>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
+          {/* <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
             <Link href="/profile">
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-2">
@@ -240,9 +240,9 @@ export default function DashboardPage() {
                 <CardDescription className="text-muted-foreground">Review past submissions</CardDescription>
               </CardHeader>
             </Link>
-          </Card>
+          </Card> */}
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
+          {/* <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
             <Link href="/progress">
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-2">
@@ -252,9 +252,9 @@ export default function DashboardPage() {
                 <CardDescription className="text-muted-foreground">Track your improvement</CardDescription>
               </CardHeader>
             </Link>
-          </Card>
+          </Card> */}
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
+          {/* <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-card border-border">
             <Link href="/admin/subjects">
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-2">
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                 <CardDescription className="text-muted-foreground">Configure UPSC subjects</CardDescription>
               </CardHeader>
             </Link>
-          </Card>
+          </Card> */}
         </div>
 
         {recentAnswers && recentAnswers.length > 0 && (
