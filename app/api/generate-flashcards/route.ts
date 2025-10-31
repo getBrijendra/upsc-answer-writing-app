@@ -64,10 +64,20 @@ export async function POST(req: Request) {
       return Response.json({ error: "Content is required" }, { status: 400 })
     }
 
+    let payload: any = { topic: content, input_type: inputType, use_case: "generate-flashcards" }
+
+    const flashcards = await fetch(`${process.env.AI_BASE_URL}/generate-essay-topics`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then((res) => res.json())
+    if (flashcards.error) {
+      throw new Error(flashcards.error)
+    }
     const creditResult = await deductCredits({
       operation_type: "flashcard_generation" as any,
       user_id: user.id,
-      cost: 5,
+      cost: 1,
     })
 
     if (!creditResult.success) {
@@ -85,10 +95,10 @@ export async function POST(req: Request) {
 
     return Response.json({
       flashcardSet: {
-        id: `temp-${Date.now()}`, // Temporary ID for unsaved flashcard set
-        title: DEMO_FLASHCARDS.title,
+        id: `temp-${Date.now()}`,
+        title: flashcards.title,
         content,
-        cards: DEMO_FLASHCARDS.cards,
+        cards: flashcards.cards,
         user_id: user.id,
       },
       remaining_credits: creditResult.remaining_credits,

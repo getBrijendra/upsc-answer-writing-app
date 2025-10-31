@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Brain, Upload, LinkIcon, FileText, Loader2, CheckCircle, XCircle, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { uploadToSupabase } from "@/lib/supabase/uploadFile"
+
 
 interface Subject {
   id: string
@@ -63,85 +65,84 @@ export default function MCQQuizGenerator({ subjects }: MCQQuizGeneratorProps) {
     }
   }
 
-  const handleProcessContent = async () => {
-    setIsProcessing(true)
-    setError(null)
+const handleProcessContent = async () => {
+  setIsProcessing(true)
+  setError(null)
 
-    try {
-      let content = ""
+  try {
+    let content = ""
 
-      if (inputType === "pdf" && file) {
-        const formData = new FormData()
-        formData.append("file", file)
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-        const result = await response.json()
-        if (!response.ok) throw new Error(result.error || "Upload failed")
-        content = result.extractedText || ""
-      } else if (inputType === "link" && link) {
-        const response = await fetch("/api/extract-content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: link }),
-        })
-        const result = await response.json()
-        if (!response.ok) throw new Error(result.error || "Failed to extract content")
-        content = result.content || ""
-      } else if (inputType === "topic" && topic) {
-        content = topic
-      }
+    if (inputType === "pdf") {
+      if (!file) throw new Error("Please select a PDF file")
 
-      setExtractedContent(content)
-      setContentReady(true)
-      setShowModal(false)
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Failed to process content")
-    } finally {
-      setIsProcessing(false)
+      //  Upload file to Supabase
+      const fileUrl  = await uploadToSupabase(file)
+
+
+      content = fileUrl
+    } 
+    else if (inputType === "link") {
+      if (!link) throw new Error("Please provide a valid link")
+      content = link
+    } 
+    else if (inputType === "topic") {
+      if (!topic.trim()) throw new Error("Please enter a topic or text content")
+      content = topic
     }
+
+    setExtractedContent(content)
+    setContentReady(true)
+    setShowModal(false)
+    setInputType(inputType)
+  } catch (error: unknown) {
+    setError(error instanceof Error ? error.message : "Failed to process content")
+  } finally {
+    setIsProcessing(false)
   }
+}
+
 
   const handleGenerateQuiz = async () => {
-    if (!extractedContent) {
-      setError("Please provide content first")
-      return
-    }
-
-    setIsGenerating(true)
-    setError(null)
-
-    try {
-      const supabase = createClient()
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) throw new Error("User not authenticated")
-
-      const response = await fetch("/api/generate-mcq", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: extractedContent,
-          numQuestions: Number.parseInt(numQuestions),
-          difficulty,
-          subject: selectedSubject,
-          language: language,
-        }),
-      })
-
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || "Failed to generate questions")
-
-      setQuestions(result.questions)
-      setCurrentQuestionIndex(0)
-      setUserAnswers({})
-      setShowResults(false)
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
-      setIsGenerating(false)
-    }
+  if (!extractedContent) {
+    setError("Please provide content first")
+    return
   }
+
+  setIsGenerating(true)
+  setError(null)
+
+  try {
+    const supabase = createClient()
+    const { data: user } = await supabase.auth.getUser()
+    if (!user.user) throw new Error("User not authenticated")
+
+    const response = await fetch("/api/generate-mcq", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: extractedContent,
+        numQuestions: Number.parseInt(numQuestions),
+        difficulty,
+        subject: selectedSubject,
+        language,
+        inputType, // send inputType (pdf, link, or topic)
+      }),
+    })
+
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || "Failed to generate questions")
+
+    setQuestions(result.questions)
+    setCurrentQuestionIndex(0)
+    setUserAnswers({})
+    setShowResults(false)
+  } catch (error: unknown) {
+    setError(error instanceof Error ? error.message : "An error occurred")
+  } finally {
+    setIsGenerating(false)
+  }
+}
+
 
   const handleAnswerSelect = (answer: string) => {
     setUserAnswers({ ...userAnswers, [currentQuestionIndex]: answer })

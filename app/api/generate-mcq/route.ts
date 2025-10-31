@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const { content, numQuestions, difficulty, subject, language, model_name = "deepseek-chat" } = await request.json()
+    const { content, numQuestions, difficulty, subject, language, model_name = "deepseek-chat", inputType } = await request.json()
 
     if (!content || !numQuestions) {
       return NextResponse.json(
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         difficulty,
         subject,
         language: language || "english",
+        input_type: inputType,
       }),
     })
 

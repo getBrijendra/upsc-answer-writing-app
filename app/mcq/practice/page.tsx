@@ -38,8 +38,9 @@ export default async function MCQPracticePage({
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
+        {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black mb-2">Practice MCQ Questions</h1>
+          <h1 className="text-4xl font-bold text-black mb-2 break-words">Practice MCQ Questions</h1>
           <p className="text-gray-600 text-lg">Test your knowledge with generated questions</p>
           {params.generated && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
@@ -49,7 +50,7 @@ export default async function MCQPracticePage({
         </div>
 
         {/* Subject Filter */}
-        {subjects && subjects.length > 0 && (
+        {/* {subjects && subjects.length > 0 && (
           <Card className="mb-8 bg-white border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg text-black">Filter by Subject</CardTitle>
@@ -71,35 +72,51 @@ export default async function MCQPracticePage({
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {/* Questions Grid */}
         {questions && questions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {questions.map((question: any) => (
-              <Card key={question.id} className="hover:shadow-lg transition-shadow bg-white border border-gray-200">
+              <Card
+                key={question.id}
+                className="hover:shadow-lg transition-shadow bg-white border border-gray-200 overflow-hidden flex flex-col"
+              >
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="text-xs border-gray-200">
+                  <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-gray-200 whitespace-nowrap truncate max-w-[150px]"
+                    >
                       {question.subjects?.name || "General"}
                     </Badge>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      {new Date(question.created_at).toLocaleDateString()}
+                    <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
+                      <Clock className="w-3 h-3 shrink-0" />
+                      <span>{new Date(question.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <CardTitle className="text-lg line-clamp-2 text-black">{question.question}</CardTitle>
+                  <CardTitle className="text-lg line-clamp-2 text-black break-words leading-snug">
+                    {question.question}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+
+                <CardContent className="flex flex-col flex-grow justify-between">
                   <div className="space-y-3">
-                    <div className="text-sm text-gray-600">
-                      <strong>Options:</strong> {question.options.length} choices
+                    <div className="text-sm text-gray-600 truncate">
+                      <strong>Options:</strong> {question.options?.length || 0} choices
                     </div>
+
                     {question.source_content && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
-                        <strong>Source:</strong> {question.source_content.substring(0, 100)}...
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100 overflow-hidden">
+                        <strong>Source:</strong>{" "}
+                        <span className="line-clamp-2 break-words">
+                          {question.source_content.substring(0, 100)}...
+                        </span>
                       </div>
                     )}
+                  </div>
+
+                  <div className="mt-4">
                     <Link href={`/mcq/question/${question.id}`}>
                       <Button className="w-full bg-black text-white hover:bg-gray-800">
                         <Brain className="w-4 h-4 mr-2" />

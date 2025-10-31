@@ -51,7 +51,6 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
   const [answer, setAnswer] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
-  const [fileCache, setFileCache] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [extractedText, setExtractedText] = useState<string | null>(null);
@@ -62,7 +61,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
   const [loadingCredits, setLoadingCredits] = useState(true);
   const router = useRouter();
 
-  // 🔹 Load user credits and operation cost
+  // 🔹 Load user credits and cost
   useEffect(() => {
     const fetchCreditsInfo = async () => {
       try {
@@ -93,7 +92,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
     fetchCreditsInfo();
   }, []);
 
-  // 🔹 Handle File Selection
+  // 🔹 Handle image file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
@@ -103,35 +102,38 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
     }
   };
 
-  // 🔹 Upload & Extract Text
+  // 🔹 Remove a specific image
+  const handleRemoveFile = (index: number) => {
+    const updatedFiles = files.filter((_, i) => i !== index);
+    setFiles(updatedFiles);
+    setUploadedUrls([]);
+    setExtractedText(null);
+  };
+
+  // 🔹 Clear all uploaded images
+  const handleClearAllFiles = () => {
+    setFiles([]);
+    setUploadedUrls([]);
+    setExtractedText(null);
+  };
+
+  // 🔹 Upload & extract text from images
   const handleFileUploadAndExtract = async () => {
     if (files.length === 0) return;
     setError(null);
-
-    const allCached = files.every((file) => fileCache[file.name]);
-
-    if (allCached) {
-      // ✅ All files already processed, use cache
-      const cachedText = Object.values(fileCache).join("\n\n");
-      setExtractedText(cachedText);
-      setShowPreviewModal(true);
-      return;
-    }
-
-    // 🔄 Otherwise, upload + call OCR API
     setIsUploading(true);
+
     try {
-      const supabase = createClient();
       const urls: string[] = [];
 
-      // Upload each file to Supabase
+      // Upload images to Supabase
       for (const file of files) {
-        const url = await uploadToSupabase(file, "user_uploaded_answers");
+        const url = await uploadToSupabase(file);
         urls.push(url);
       }
 
-      // Call the OCR endpoint
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/extract-image-text", {
+      // Call text extraction API
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/extract-image-text`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image_urls: urls }),
@@ -140,26 +142,23 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to extract text");
 
-      const text = data.text || "";
-      setUploadedUrls(urls);
-      setExtractedText(text);
+      const extracted = data.text?.trim() || "";
+      if (!extracted) throw new Error("No text detected in uploaded image(s)");
 
-      // Cache extracted text
-      const updatedCache = { ...fileCache };
-      for (const file of files) {
-        updatedCache[file.name] = text;
-      }
-      setFileCache(updatedCache);
+      // ✅ Auto-insert text into textarea
+      setAnswer((prev) => (prev ? prev + "\n\n" + extracted : extracted));
+      setExtractedText(extracted);
+      setUploadedUrls(urls);
 
       setShowPreviewModal(true);
     } catch (err: any) {
-      setError(err.message || "File upload or processing failed");
+      setError(err.message || "Failed to process images");
     } finally {
       setIsUploading(false);
     }
   };
 
-  // 🔹 Submit Form
+  // 🔹 Submit answer for review
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -177,10 +176,9 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
     try {
       const supabase = createClient();
       const { data: user } = await supabase.auth.getUser();
-
       if (!user.user) throw new Error("User not authenticated");
 
-      // Step 1: Insert answer record
+      // Step 1: Save answer
       const { data: insertedAnswer, error: insertError } = await supabase
         .from("answers")
         .insert({
@@ -213,7 +211,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
       if (!feedbackResponse.ok)
         throw new Error(feedbackResult.error || "Failed to generate feedback");
 
-      // Step 3: Update feedback in DB
+      // Step 3: Save feedback
       await supabase
         .from("answers")
         .update({
@@ -349,7 +347,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                 id="answer"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Write your detailed answer..."
+                placeholder="Write or auto-fill your answer..."
                 className="min-h-[300px]"
               />
               <div className="text-sm text-slate-500">
@@ -363,22 +361,48 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
               </div>
             </div>
 
-            {/* File Upload */}
+            {/* Image Upload */}
             <div className="space-y-2">
-              <Label>Upload Supporting Files</Label>
+              <Label>Upload Answer Images In Order (supports JPG, PNG, JPEG)</Label>
               <Input
                 type="file"
                 multiple
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                accept="image/*"
                 onChange={handleFileChange}
               />
               {files.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {files.map((f) => (
-                    <div key={f.name} className="text-sm flex items-center gap-2 text-slate-600">
-                      <FileText className="w-4 h-4" /> {f.name}
+                <div className="mt-3 space-y-2">
+                  {files.map((file, index) => (
+                    <div
+                      key={file.name + index}
+                      className="flex items-center justify-between px-3 py-2 border rounded-md bg-gray-50"
+                    >
+                      <div className="flex items-center gap-2 text-slate-700 text-sm">
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        {file.name}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleRemoveFile(index)}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   ))}
+                  {files.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-1 text-xs"
+                      onClick={handleClearAllFiles}
+                    >
+                      Clear All
+                    </Button>
+                  )}
                 </div>
               )}
               {files.length > 0 && (
@@ -391,7 +415,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                   {isUploading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing Files...
+                      Processing Images...
                     </>
                   ) : (
                     <>
@@ -427,7 +451,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
         </CardContent>
       </Card>
 
-      {/* 🔹 Modal Preview */}
+      {/* 🔹 Extracted Text Modal (optional preview) */}
       <ExtractedTextModal
         open={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}

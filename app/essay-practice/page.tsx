@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,39 +42,6 @@ interface Topic {
   wordLimit: number
 }
 
-const HARDCODED_TOPICS: Topic[] = [
-  {
-    title: "Digital India and Rural Transformation",
-    description: "Discuss how digital initiatives are transforming rural India and the challenges in implementation.",
-    difficulty: "Medium",
-    wordLimit: 1000,
-  },
-  {
-    title: "Climate Change and Sustainable Development",
-    description: "Analyze the relationship between climate change mitigation and sustainable development goals.",
-    difficulty: "Hard",
-    wordLimit: 1200,
-  },
-  {
-    title: "Women Empowerment in Modern India",
-    description: "Evaluate the progress and challenges in women empowerment in contemporary Indian society.",
-    difficulty: "Medium",
-    wordLimit: 1000,
-  },
-  {
-    title: "Role of Youth in Nation Building",
-    description: "Examine the role of youth in shaping India's future and their contribution to nation building.",
-    difficulty: "Easy",
-    wordLimit: 800,
-  },
-  {
-    title: "Technology and Education Reform",
-    description: "Discuss how technology is revolutionizing education and the challenges in its implementation.",
-    difficulty: "Medium",
-    wordLimit: 1000,
-  },
-]
-
 export default function EssayPracticePage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [inputType, setInputType] = useState<"text" | "file" | "link">("text")
@@ -87,7 +53,6 @@ export default function EssayPracticePage() {
   const [customTopic, setCustomTopic] = useState("")
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
   const [essay, setEssay] = useState("")
-  const [uploadedEssay, setUploadedEssay] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userCredits, setUserCredits] = useState<number>(0)
   const [creditCost, setCreditCost] = useState<number>(7)
@@ -95,6 +60,11 @@ export default function EssayPracticePage() {
   const [language, setLanguage] = useState("english")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+
+  // 🆕 Image upload states
+  const [uploadedEssayImages, setUploadedEssayImages] = useState<File[]>([])
+  const [isExtracting, setIsExtracting] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   useEffect(() => {
     const fetchCreditsInfo = async () => {
@@ -128,90 +98,49 @@ export default function EssayPracticePage() {
     fetchCreditsInfo()
   }, [])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-    }
-  }
-
-  const handleEssayFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setUploadedEssay(e.target.files[0])
-    }
-  }
-
+  // 🧠 Generate AI Topics
   const handleGenerateTopics = async () => {
     setIsGenerating(true)
     setError(null)
 
     try {
       let content = ""
-
-      if (inputType === "text") {
-        content = textContent
-      } else if (inputType === "link") {
-        content = linkUrl
-      } else if (inputType === "file" && file) {
+      if (inputType === "text") content = textContent
+      else if (inputType === "link") content = linkUrl
+      else if (inputType === "file" && file) {
         const formData = new FormData()
         formData.append("file", file)
 
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-
-        let uploadResult
-        try {
-          uploadResult = await uploadResponse.json()
-        } catch (jsonError) {
-          console.error("[v0] Failed to parse upload response as JSON:", jsonError)
-          throw new Error("Server returned an invalid response for file upload")
-        }
-
-        if (!uploadResponse.ok) {
-          throw new Error(uploadResult.error || "File upload failed")
-        }
-
+        const uploadResponse = await fetch("/api/upload", { method: "POST", body: formData })
+        const uploadResult = await uploadResponse.json()
+        if (!uploadResponse.ok) throw new Error(uploadResult.error || "File upload failed")
         content = uploadResult.extractedText
       }
 
-      if (!content.trim()) {
-        throw new Error("Please provide content to generate topics")
-      }
+      if (!content.trim()) throw new Error("Please provide content to generate topics")
 
       const response = await fetch("/api/generate-essay-topics", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, inputType }),
       })
 
       const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to generate topics")
-      }
+      if (!response.ok) throw new Error(result.error || "Failed to generate topics")
 
       setGeneratedTopics(result.topics)
       setIsModalOpen(false)
       setTextContent("")
       setLinkUrl("")
       setFile(null)
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+    } catch (error: any) {
+      setError(error.message)
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const handleTopicSelect = (topic: Topic) => {
-    setSelectedTopic(topic)
-    setCustomTopic("")
-    setEssay("")
-    setUploadedEssay(null)
-  }
-
+  // ✍️ Topic handling
   const handleCustomTopicSubmit = () => {
     if (!customTopic.trim()) {
       setError("Please enter a topic")
@@ -225,27 +154,55 @@ export default function EssayPracticePage() {
       wordLimit: 1000,
     })
     setEssay("")
-    setUploadedEssay(null)
+    setUploadedEssayImages([])
     setError(null)
   }
 
+  const handleTopicSelect = (topic: Topic) => {
+    setSelectedTopic(topic)
+    setEssay("")
+    setUploadedEssayImages([])
+  }
+
+  // 🧠 Image -> Text Extraction
+  const handlePreviewText = async () => {
+    try {
+      setIsExtracting(true)
+      setError(null)
+
+      const supabase = createClient()
+      const imageUrls: string[] = []
+
+      for (const img of uploadedEssayImages) {
+        const url = await uploadToSupabase(img, "user_uploaded_answers")
+        imageUrls.push(url)
+      }
+
+      const response = await fetch("http://localhost:8000/extract-image-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_urls: imageUrls }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to extract text")
+
+      setEssay(data.text)
+      setIsPreviewOpen(true)
+    } catch (err: any) {
+      console.error("Error extracting text:", err)
+      setError(err.message || "Error extracting text")
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
+  // 📤 Submit essay for analysis
   const handleSubmitEssay = async () => {
-    if (!selectedTopic) {
-      setError("Please select or enter a topic first")
-      return
-    }
-
-    if (!essay.trim() && !uploadedEssay) {
-      setError("Please write an essay or upload a PDF")
-      return
-    }
-
-    if (userCredits < creditCost) {
-      setError(
-        `Insufficient credits. You need ${creditCost} credits for AI analysis, but you only have ${userCredits} credits.`,
-      )
-      return
-    }
+    if (!selectedTopic) return setError("Please select or enter a topic first")
+    if (!essay.trim()) return setError("Please write or extract essay text first")
+    if (userCredits < creditCost)
+      return setError(`Need ${creditCost} credits, but you have ${userCredits}.`)
 
     setIsSubmitting(true)
     setError(null)
@@ -253,239 +210,144 @@ export default function EssayPracticePage() {
     try {
       const supabase = createClient()
       const { data: user } = await supabase.auth.getUser()
-
       if (!user.user) throw new Error("User not authenticated")
 
-      const essayContent = essay
-      let uploadResponseUrl = null
-
-      // Upload essay file if provided
-      if (uploadedEssay) {
-        uploadResponseUrl = await uploadToSupabase(uploadedEssay, "user_uploaded_essays")
-      }
-
-      // Step 1: Insert essay record
       const { data: insertedEssay, error: insertError } = await supabase
         .from("essays")
         .insert({
           user_id: user.user.id,
           topic: selectedTopic.title,
-          essay_text: essayContent.trim(),
-          file_url: uploadResponseUrl || null,
+          essay_text: essay.trim(),
           language,
         })
         .select()
         .single()
-
       if (insertError) throw insertError
 
-      // Step 2: Generate feedback
-      const feedbackResponse = await fetch("/api/analyze-essay", {
+      const feedbackResponse = await fetch("/api/generate-feedback", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic: selectedTopic.title,
-          essay: essayContent.trim(),
+          question: selectedTopic.title,
+          answer: essay.trim(),
           language,
-          file_url: uploadResponseUrl || null,
+          subject: "c1d854b5-35f4-4bf2-91e4-3f48b9de1d04",
         }),
       })
 
       const feedbackResult = await feedbackResponse.json()
       if (!feedbackResponse.ok) throw new Error(feedbackResult.error || "Failed to generate feedback")
 
-      // Step 3: Update essay with feedback and score
+      const feedbackData = feedbackResult.feedback?.feedback || feedbackResult.feedback
       await supabase
         .from("essays")
         .update({
-          feedback: feedbackResult,
-          score: feedbackResult.feedback?.overall_score || 0,
+          feedback: feedbackData,
+          score: feedbackData?.overall_score || 0,
         })
         .eq("id", insertedEssay.id)
 
-      // Update credits display
-      if (feedbackResult.remaining_credits !== undefined) {
-        setUserCredits(feedbackResult.remaining_credits)
-      }
-
-      // Redirect to essay feedback page
+      if (feedbackResult.remaining_credits !== undefined) setUserCredits(feedbackResult.remaining_credits)
       router.push(`/essay/${insertedEssay.id}`)
-    } catch (error: unknown) {
-      console.error("[v0] Error submitting essay:", error)
-      setError(error instanceof Error ? error.message : "An error occurred")
+    } catch (error: any) {
+      console.error("Error submitting essay:", error)
+      setError(error.message)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-100 text-green-800"
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "Hard":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
+  const getDifficultyColor = (d: string) =>
+    d === "Easy"
+      ? "bg-green-100 text-green-800"
+      : d === "Medium"
+      ? "bg-yellow-100 text-yellow-800"
+      : "bg-red-100 text-red-800"
 
-  const wordCount = essay
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0).length
+  const wordCount = essay.trim().split(/\s+/).filter(Boolean).length
 
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-black mb-2">Essay Writing Practice</h1>
-              <p className="text-gray-600 text-lg">Select a topic or write your own to practice essay writing</p>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-              <Coins className="w-5 h-5 text-yellow-500" />
-              <span className="text-lg font-medium">{loadingCredits ? "..." : userCredits}</span>
-            </div>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-black mb-2">Essay Writing Practice</h1>
+            <p className="text-gray-600 text-lg">Choose or generate a topic to practice essay writing</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+            <Coins className="w-5 h-5 text-yellow-500" />
+            <span className="text-lg font-medium">{loadingCredits ? "..." : userCredits}</span>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-6">
-          {!loadingCredits && userCredits < creditCost && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 text-red-800">
-                  <AlertTriangle className="w-5 h-5" />
-                  <span className="font-medium">Insufficient Credits</span>
-                </div>
-                <p className="text-red-700 mt-1">
-                  You need {creditCost} credits for AI essay analysis, but you only have {userCredits} credits. Please
-                  purchase more credits from the pricing page.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="shadow-xl border-0">
+          {/* Custom Topic */}
+          <Card>
             <CardHeader>
-              <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-indigo-600" />
-                Popular Essay Topics
-              </CardTitle>
-              <CardDescription>Click on any topic to start practicing</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3">
-                {HARDCODED_TOPICS.map((topic, index) => (
-                  <Card
-                    key={index}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      selectedTopic?.title === topic.title ? "ring-2 ring-indigo-500 bg-indigo-50" : "hover:bg-slate-50"
-                    }`}
-                    onClick={() => handleTopicSelect(topic)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-semibold text-indigo-600">Topic {index + 1}</span>
-                            <Badge className={getDifficultyColor(topic.difficulty)}>{topic.difficulty}</Badge>
-                          </div>
-                          <h3 className="font-semibold text-slate-800 mb-1">{topic.title}</h3>
-                          <p className="text-sm text-slate-600">{topic.description}</p>
-                          <p className="text-xs text-slate-500 mt-2">Word Limit: {topic.wordLimit} words</p>
-                        </div>
-                        {selectedTopic?.title === topic.title && (
-                          <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                        )}
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
                 <PenLine className="w-6 h-6 text-indigo-600" />
                 Write Your Own Topic
               </CardTitle>
-              <CardDescription>Enter a custom essay topic to practice</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="customTopic" className="text-slate-700 font-medium">
-                  Custom Essay Topic
-                </Label>
-                <Textarea
-                  id="customTopic"
-                  placeholder="Enter your essay topic here..."
-                  value={customTopic}
-                  onChange={(e) => setCustomTopic(e.target.value)}
-                  className="min-h-[100px] resize-none"
-                />
-              </div>
+            <CardContent>
+              <Textarea
+                placeholder="Enter your essay topic..."
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+              />
               <Button
                 onClick={handleCustomTopicSubmit}
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700"
                 disabled={!customTopic.trim()}
               >
-                <PenLine className="w-4 h-4 mr-2" />
-                Use This Topic
+                <PenLine className="w-4 h-4 mr-2" /> Use This Topic
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-indigo-50 to-purple-50">
+          {/* AI Topic Generation */}
+          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-indigo-600" />
-                Generate AI Topics
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Sparkles className="w-6 h-6 text-indigo-600" /> Generate AI Topics
               </CardTitle>
-              <CardDescription>Use AI to generate custom topics based on your study material</CardDescription>
             </CardHeader>
             <CardContent>
               <Button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center gap-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
               >
-                <Sparkles className="w-4 h-4" />
-                Generate AI Topics
+                <Sparkles className="w-4 h-4 mr-2" /> Generate AI Topics
               </Button>
 
               {generatedTopics.length > 0 && (
-                <div className="mt-6 space-y-3">
-                  <Label className="text-slate-700 font-medium">AI Generated Topics</Label>
+                <div className="mt-6">
+                  <Label className="text-slate-700 font-medium mb-2 block">
+                    AI Generated Topics
+                  </Label>
                   <div className="grid gap-3">
-                    {generatedTopics.map((topic, index) => (
+                    {generatedTopics.map((t, i) => (
                       <Card
-                        key={index}
+                        key={i}
+                        onClick={() => handleTopicSelect(t)}
                         className={`cursor-pointer transition-all hover:shadow-md ${
-                          selectedTopic?.title === topic.title
+                          selectedTopic?.title === t.title
                             ? "ring-2 ring-indigo-500 bg-indigo-50"
                             : "hover:bg-slate-50"
                         }`}
-                        onClick={() => handleTopicSelect(topic)}
                       >
                         <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-sm font-semibold text-indigo-600">AI Topic {index + 1}</span>
-                                <Badge className={getDifficultyColor(topic.difficulty)}>{topic.difficulty}</Badge>
+                          <div className="flex justify-between">
+                            <div>
+                              <div className="flex gap-2 mb-2">
+                                <Badge className={getDifficultyColor(t.difficulty)}>{t.difficulty}</Badge>
                               </div>
-                              <h3 className="font-semibold text-slate-800 mb-1">{topic.title}</h3>
-                              <p className="text-sm text-slate-600">{topic.description}</p>
-                              <p className="text-xs text-slate-500 mt-2">Word Limit: {topic.wordLimit} words</p>
+                              <h3 className="font-semibold">{t.title}</h3>
+                              <p className="text-sm text-slate-600">{t.description}</p>
                             </div>
-                            {selectedTopic?.title === topic.title && (
-                              <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                            {selectedTopic?.title === t.title && (
+                              <CheckCircle className="w-5 h-5 text-indigo-600" />
                             )}
                           </div>
                         </CardHeader>
@@ -497,69 +359,115 @@ export default function EssayPracticePage() {
             </CardContent>
           </Card>
 
+          {/* Essay Writing Section */}
           {selectedTopic && (
             <Card className="shadow-xl border-0">
               <CardHeader>
-                <CardTitle className="text-2xl text-slate-800 flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
                   <Brain className="w-6 h-6 text-indigo-600" />
                   Write Your Essay
                 </CardTitle>
-                <CardDescription>Write your essay or upload a PDF for AI analysis</CardDescription>
+                <CardDescription>Upload handwritten images or type your essay</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Topic Card */}
+                <Card className="bg-indigo-50 border-indigo-200">
+                  <CardHeader>
+                    <h3 className="font-semibold">{selectedTopic.title}</h3>
+                    <p className="text-sm text-slate-600">{selectedTopic.description}</p>
+                  </CardHeader>
+                </Card>
+
+                {/* 🆕 Image Upload */}
                 <div className="space-y-2">
-                  <Label className="text-slate-700 font-medium">Selected Topic</Label>
-                  <Card className="bg-indigo-50 border-indigo-200">
-                    <CardHeader className="pb-3">
-                      <h3 className="font-semibold text-slate-800">{selectedTopic.title}</h3>
-                      {selectedTopic.description !== "Custom topic" && (
-                        <p className="text-sm text-slate-600">{selectedTopic.description}</p>
+                  <Label>Upload Essay Images</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        const files = Array.from(e.target.files)
+                        setUploadedEssayImages((p) => [...p, ...files])
+                      }
+                    }}
+                  />
+                  {uploadedEssayImages.length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-2">
+                      {uploadedEssayImages.map((img, i) => (
+                        <div key={i} className="relative group">
+                          <img
+                            src={URL.createObjectURL(img)}
+                            alt={`img-${i}`}
+                            className="w-28 h-28 object-cover border rounded-lg"
+                          />
+                          <button
+                            onClick={() =>
+                              setUploadedEssayImages((prev) => prev.filter((_, idx) => idx !== i))
+                            }
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {uploadedEssayImages.length > 0 && (
+                    <Button
+                      onClick={handlePreviewText}
+                      disabled={isExtracting}
+                      className="mt-3 bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {isExtracting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Extracting Text...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4 mr-2" /> Preview Text
+                        </>
                       )}
-                    </CardHeader>
-                  </Card>
+                    </Button>
+                  )}
+                  <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Extracted Text</DialogTitle>
+                      </DialogHeader>
+                      <DialogDescription>
+                        <Textarea
+                          value={essay}
+                          onChange={(e) => setEssay(e.target.value)}
+                          className="min-h-[300px]"
+                        />
+                      </DialogDescription>
+                      <DialogFooter>
+                        <Button onClick={() => setIsPreviewOpen(false)}>Close</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
 
+                {/* Essay Text */}
                 <div className="space-y-2">
-                  <Label htmlFor="essay" className="text-slate-700 font-medium">
-                    Write Your Essay
-                  </Label>
+                  <Label>Essay Text</Label>
                   <Textarea
-                    id="essay"
-                    placeholder="Start writing your essay here..."
+                    placeholder="Write or review extracted essay text..."
                     value={essay}
                     onChange={(e) => setEssay(e.target.value)}
-                    className="min-h-[400px] resize-none"
+                    className="min-h-[400px]"
                   />
-                  <div className="flex items-center justify-between text-sm text-slate-500">
+                  <div className="text-sm text-slate-500 flex justify-between">
                     <span>Word count: {wordCount}</span>
-                    <span>Target: {selectedTopic.wordLimit} words</span>
+                    <span>Target: {selectedTopic.wordLimit}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="essayFile" className="text-slate-700 font-medium">
-                    Or Upload Essay PDF
-                  </Label>
-                  <Input
-                    id="essayFile"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleEssayFileChange}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                  />
-                  {uploadedEssay && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
-                      <CheckCircle className="w-4 h-4" />
-                      {uploadedEssay.name}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="language" className="text-slate-700 font-medium">
-                    Language
-                  </Label>
-                  <Select value={language} onValueChange={setLanguage} required>
+                {/* Language */}
+                <div>
+                  <Label>Language</Label>
+                  <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
@@ -571,23 +479,21 @@ export default function EssayPracticePage() {
                 </div>
 
                 {error && (
-                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
+                  <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
                 )}
 
                 <Button
                   onClick={handleSubmitEssay}
-                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
                   disabled={isSubmitting || userCredits < creditCost}
+                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing Essay...
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing Essay...
                     </>
                   ) : (
                     <>
-                      <Brain className="w-4 h-4 mr-2" />
-                      Submit for AI Analysis ({creditCost} Credits)
+                      <Brain className="w-4 h-4 mr-2" /> Submit for AI Analysis
                     </>
                   )}
                 </Button>
@@ -597,6 +503,7 @@ export default function EssayPracticePage() {
         </div>
       </div>
 
+      {/* AI Topic Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -604,76 +511,27 @@ export default function EssayPracticePage() {
               <Sparkles className="w-5 h-5 text-indigo-600" />
               Generate Essay Topics with AI
             </DialogTitle>
-            <DialogDescription>
-              Provide content through text, file, or link to generate 5 relevant essay topics
-            </DialogDescription>
+            <DialogDescription>Provide text or file to generate 5 relevant essay topics</DialogDescription>
           </DialogHeader>
 
-          <Tabs value={inputType} onValueChange={(v) => setInputType(v as "text" | "file" | "link")}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="text" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Text
-              </TabsTrigger>
-              <TabsTrigger value="file" className="flex items-center gap-2">
-                <Upload className="w-4 h-4" />
-                File
-              </TabsTrigger>
-              <TabsTrigger value="link" className="flex items-center gap-2">
-                <LinkIcon className="w-4 h-4" />
-                Link
-              </TabsTrigger>
+          <Tabs value="text">
+            <TabsList className="w-full">
+              <TabsTrigger value="text">Text</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="textContent">Enter Text Content</Label>
-                <Textarea
-                  id="textContent"
-                  placeholder="Paste your study material, notes, or any text content here..."
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  className="min-h-[200px] resize-none"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="file" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fileUpload">Upload File</Label>
-                <Input
-                  id="fileUpload"
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt"
-                  onChange={handleFileChange}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                />
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 p-2 rounded">
-                    <FileText className="w-4 h-4" />
-                    {file.name}
-                  </div>
-                )}
-                <p className="text-xs text-slate-500">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="link" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="linkUrl">Enter URL</Label>
-                <Input
-                  id="linkUrl"
-                  type="url"
-                  placeholder="https://example.com/article"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                />
-                <p className="text-xs text-slate-500">AI will extract content from the provided URL</p>
-              </div>
+            <TabsContent value="text">
+              <Label htmlFor="textContent">Enter Text Content</Label>
+              <Textarea
+                id="textContent"
+                placeholder="Paste your notes or text here..."
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+                className="min-h-[200px]"
+              />
             </TabsContent>
           </Tabs>
 
-          {error && <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>}
+          {error && <div className="text-red-600 text-sm bg-red-50 p-2 mt-2 rounded">{error}</div>}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isGenerating}>
@@ -686,13 +544,11 @@ export default function EssayPracticePage() {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate 5 Topics
+                  <Sparkles className="w-4 h-4 mr-2" /> Generate Topics
                 </>
               )}
             </Button>

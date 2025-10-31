@@ -25,9 +25,9 @@ export default function Navigation() {
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/practice", label: "Practice", icon: PenTool },
     { href: "/mcq", label: "MCQ Generator", icon: Brain },
-    { href: "/progress", label: "Progress", icon: BarChart3 },
+    // { href: "/progress", label: "Progress", icon: BarChart3 },
     { href: "/profile", label: "Profile", icon: User },
-    { href: "/essay-writing", label: "Daily Q", icon: FileText },
+    { href: "/daily-questions", label: "Daily Q", icon: FileText },
     { href: "/essay-practice", label: "Essay Practice", icon: PenTool },
     { href: "/pricing", label: "Buy Credits", icon: User },
   ]
@@ -35,17 +35,15 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           <Link
             href="/dashboard"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <div className="flex items-center justify-center rounded-md bg-white">
-              <Image src="/logo/lemura_logo.png" alt="Lemura logo" width={60} height={8} priority />
+            <div className="flex items-center justify-center mt-3">
+              <Image src="/logo/pencil_logo.png" alt="Lemura logo" width={130} height={130} priority />
             </div>
-            <span className="text-2xl font-bold text-black">Lemura</span>
           </Link>
-
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => {
@@ -56,11 +54,10 @@ export default function Navigation() {
                   <Button
                     variant={isActive ? "default" : "ghost"}
                     size="sm"
-                    className={`flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                      isActive
+                    className={`flex items-center gap-2 cursor-pointer transition-all duration-200 ${isActive
                         ? "bg-black text-white hover:bg-gray-800"
                         : "text-gray-700 hover:text-black hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
@@ -106,11 +103,10 @@ export default function Navigation() {
                     <Button
                       variant={isActive ? "default" : "ghost"}
                       size="sm"
-                      className={`w-full justify-start flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                        isActive
+                      className={`w-full justify-start flex items-center gap-2 cursor-pointer transition-all duration-200 ${isActive
                           ? "bg-black text-white hover:bg-gray-800"
                           : "text-gray-700 hover:text-black hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       {item.label}

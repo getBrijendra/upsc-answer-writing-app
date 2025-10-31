@@ -22,7 +22,8 @@ export default async function EssayFeedbackPage({ params }: { params: Promise<{ 
     redirect("/dashboard")
   }
 
-  const feedback = essay.feedback?.analysis ? parseAnalysis(essay.feedback.analysis) : {}
+ const feedback = essay.feedback || {}
+
 
   function parseAnalysis(analysisText: string) {
     // Parse the markdown-formatted analysis text into structured feedback
@@ -181,16 +182,12 @@ export default async function EssayFeedbackPage({ params }: { params: Promise<{ 
                 <p className="text-sm text-gray-600">{feedback?.detailed_analysis?.content}</p>
               </div>
               <div>
-                <h4 className="font-medium text-black mb-1">Structure & Organization</h4>
-                <p className="text-sm text-gray-600">{feedback?.detailed_analysis?.structure}</p>
+                <h4 className="font-medium text-black mb-1">Suggestions for Improvement</h4>
+                <p className="text-sm text-gray-600">{feedback?.suggestions}</p>
               </div>
               <div>
-                <h4 className="font-medium text-black mb-1">Language & Expression</h4>
-                <p className="text-sm text-gray-600">{feedback?.detailed_analysis?.language}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-black mb-1">Critical Analysis</h4>
-                <p className="text-sm text-gray-600">{feedback?.detailed_analysis?.critical_analysis}</p>
+                <h4 className="font-medium text-black mb-1">Relevance</h4>
+                <p className="text-sm text-gray-600">{feedback?.detailed_analysis?.relevance}</p>
               </div>
             </CardContent>
           </Card>
