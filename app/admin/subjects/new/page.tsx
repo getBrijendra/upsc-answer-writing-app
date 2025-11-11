@@ -24,7 +24,7 @@ export default async function NewSubjectPage() {
             </Button>
           </Link>
           <h1 className="text-4xl font-bold text-black mb-2">Add New Subject</h1>
-          <p className="text-gray-600 text-lg">Create a new UPSC subject for the platform</p>
+          <p className="text-gray-600 text-lg">Create a new Civil Service Examination subject for the platform</p>
         </div>
 
         <SubjectForm />

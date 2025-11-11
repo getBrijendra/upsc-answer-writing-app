@@ -30,7 +30,7 @@ export default function LoginPage() {
         password,
       })
       if (error) throw error
-      router.push("/dashboard")
+      router.push("/profile")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
@@ -68,7 +68,7 @@ export default function LoginPage() {
               Welcome Back
             </CardTitle>
             <CardDescription className="text-slate-600">
-              Sign in to continue your UPSC preparation journey
+              Sign in to continue your Civil Service Examination preparation journey
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">

@@ -168,7 +168,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Welcome back, {profile?.full_name || "Aspirant"}!</h1>
-          <p className="text-muted-foreground text-lg">Ready to continue your UPSC preparation journey?</p>
+          <p className="text-muted-foreground text-lg">Ready to continue your Civil Service Examination preparation journey?</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                   <PenTool className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-lg text-foreground">Answer Writing</CardTitle>
-                <CardDescription className="text-muted-foreground">Practice with real UPSC questions</CardDescription>
+                <CardDescription className="text-muted-foreground">Practice with real Civil Service Examination questions</CardDescription>
               </CardHeader>
             </Link>
           </Card>

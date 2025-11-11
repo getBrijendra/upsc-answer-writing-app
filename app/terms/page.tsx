@@ -12,7 +12,7 @@ export default function TermsOfServicePage() {
             </div>
             <h1 className="text-4xl font-bold text-black mb-4">Terms of Service</h1>
             <p className="text-gray-600 text-lg">
-              Please read these terms carefully before using Lemura's UPSC preparation platform.
+              Please read these terms carefully before using Lemura's Civil Service Examination preparation platform.
             </p>
             <p className="text-sm text-gray-500 mt-2">Last updated: {new Date().toLocaleDateString()}</p>
           </div>

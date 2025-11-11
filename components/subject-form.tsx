@@ -81,7 +81,7 @@ export default function SubjectForm({ subject }: SubjectFormProps) {
         <CardHeader>
           <CardTitle className="text-2xl text-slate-800">{subject ? "Edit Subject" : "Create New Subject"}</CardTitle>
           <CardDescription>
-            {subject ? "Update the subject information below" : "Add a new UPSC subject to the platform"}
+            {subject ? "Update the subject information below" : "Add a new Civil Service Examination subject to the platform"}
           </CardDescription>
         </CardHeader>
         <CardContent>

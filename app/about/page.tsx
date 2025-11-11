@@ -13,7 +13,7 @@ export default function AboutPage() {
     {
       icon: Users,
       title: "Community",
-      description: "We’re building a strong, supportive network of UPSC aspirants who grow, learn, and succeed together.",
+      description: "We’re building a strong, supportive network of Civil Services Examination aspirants who grow, learn, and succeed together.",
     },
     {
       icon: Award,
@@ -23,7 +23,7 @@ export default function AboutPage() {
     {
       icon: Lightbulb,
       title: "Innovation",
-      description: "We continuously push boundaries to bring the most advanced and effective learning tools to UPSC preparation.",
+      description: "We continuously push boundaries to bring the most advanced and effective learning tools to Civil Services Examination preparation.",
     },
     {
       icon: Heart,
@@ -39,28 +39,28 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: "Dr. Rajesh Kumar",
+      name: "Mr. Vishal",
       role: "Founder & CEO",
-      description: "Former IAS officer with 15+ years of civil service experience and a PhD in Public Administration.",
-      image: "/professional-indian-man-suit.png",
+      description: "Software engineer specializing in AI and educational technology.",
+      image: "/vishal.jpg",
     },
     {
-      name: "Priya Sharma",
+      name: "Mr. Sohit Prajapati",
       role: "Head of AI & Technology",
-      description: "AI researcher and IIT Delhi alumna specializing in NLP and educational technology innovation.",
-      image: "/professional-indian-woman.png",
+      description: "Software engineer specializing in Agentic AI and Machine Learning.",
+      image: "/sohit.jpg",
     },
     {
-      name: "Amit Verma",
+      name: "Mr. Peeyush Prajapati",
       role: "Head of Content",
-      description: "UPSC CSE Topper (Rank 12, 2018) and an educator with over 8 years of experience in civil services coaching.",
+      description: "Marketing specialist with a focus on educational content and learner engagement.",
       image: "/professional-indian-man-teacher.jpg",
     },
     {
-      name: "Sneha Patel",
+      name: "Mr. Brijendra Kumar",
       role: "Product Manager",
-      description: "MBA from ISB and product strategist focused on learner experience and impactful educational outcomes.",
-      image: "/professional-indian-woman-product-manager.jpg",
+      description: "Product strategist focused on learner experience and impactful educational outcomes.",
+      image: "/professional-indian-man-suit.png",
     },
   ]
 
@@ -79,7 +79,7 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-black mb-6">About Lemura</h1>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Lemura is transforming UPSC preparation through Artificial Intelligence — providing every aspirant across India
+              Lemura is transforming Civil Services Examination preparation through Artificial Intelligence — providing every aspirant across India
               with the tools to study smarter, write better, and realize their dream of serving the nation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -122,10 +122,10 @@ export default function AboutPage() {
                 <h2 className="text-3xl font-bold text-black mb-6">Our Story</h2>
                 <div className="space-y-4 text-gray-600 leading-relaxed">
                   <p>
-                    Lemura was founded with a simple vision — to make UPSC preparation equitable and accessible to every aspirant, regardless of background or location.
+                    Lemura was founded with a simple vision — to make Civil Services Examination preparation equitable and accessible to every aspirant, regardless of background or location.
                   </p>
                   <p>
-                    Established in 2023 by a team of former civil servants, AI researchers, and educators, Lemura blends technology and pedagogy to create a holistic, result-oriented learning platform.
+                    Established in 2025 by a team of former AI experts, AI researchers, and Mentors, Lemura blends technology and pedagogy to create a holistic, result-oriented learning platform.
                   </p>
                   <p>
                     Today, Lemura supports over 50,000 learners across India — helping them refine their answers, evaluate progress, and build the confidence needed to succeed in the Civil Services Examination.
@@ -150,7 +150,7 @@ export default function AboutPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-black mb-4">Our Core Values</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              These guiding principles define who we are and how we empower the UPSC community to grow and succeed.
+              These guiding principles define who we are and how we empower the Civil Services Examination community to grow and succeed.
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export default function AboutPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-black mb-4">Meet Our Team</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              A team of visionaries, educators, and innovators working together to redefine UPSC preparation for the digital age.
+              A team of visionaries, educators, and innovators working together to redefine Civil Services Examination preparation for the digital age.
             </p>
           </div>
 
@@ -192,7 +192,7 @@ export default function AboutPage() {
                   <img
                     src={member.image || "/placeholder.svg"}
                     alt={member.name}
-                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                    className="w-30 h-30 rounded-full mx-auto mb-4 object-cover"
                   />
                   <CardTitle className="text-lg text-black">{member.name}</CardTitle>
                   <CardDescription className="text-gray-600 font-medium">{member.role}</CardDescription>
@@ -212,7 +212,7 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              To empower every UPSC aspirant with world-class preparation tools, real-time feedback, and a personalized learning experience — helping them build confidence and succeed in their civil services journey.
+              To empower every Civil Services Examination aspirant with world-class preparation tools, real-time feedback, and a personalized learning experience — helping them build confidence and succeed in their civil services journey.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
               <div className="text-center">
@@ -237,7 +237,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-black mb-4">Ready to Begin Your Journey?</h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of dedicated aspirants who have transformed their UPSC preparation through Lemura’s AI-powered approach.
+            Join thousands of dedicated aspirants who have transformed their Civil Services Examination preparation through Lemura’s AI-powered approach.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup">

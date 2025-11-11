@@ -120,7 +120,7 @@ export default function EssayWritingPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-black mb-4">Daily UPSC Practice Questions</h1>
+        <h1 className="text-3xl font-bold text-black mb-4">Daily Civil Service Examination Practice Questions</h1>
         <p className="text-gray-600 mb-8">
           New questions are generated every day at first access. Click the copy button to copy a question for your answer writing practice.
         </p>

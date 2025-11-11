@@ -61,7 +61,7 @@ export default function SignUpPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/profile`,
         },
       })
       if (error) throw error
@@ -79,7 +79,7 @@ export default function SignUpPage() {
         <Card className="shadow-2xl border-0 bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-sm">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Join UPSC Prep
+              Join Civil Service Examination Prep
             </CardTitle>
             <CardDescription className="text-slate-600">Create your account to start practicing</CardDescription>
           </CardHeader>

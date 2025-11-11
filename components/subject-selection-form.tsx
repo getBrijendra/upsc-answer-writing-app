@@ -15,6 +15,7 @@ interface Subject {
   id: string
   name: string
   description: string
+  category: string
 }
 
 interface SubjectSelectionFormProps {
@@ -104,28 +105,30 @@ export default function SubjectSelectionForm({
       <CardHeader>
         <CardTitle>Select Optional Subject</CardTitle>
         <CardDescription>
-          Choose an optional subject for your UPSC preparation. This can only be changed by contacting support once
+          Choose an optional subject for your Civil Service Examination preparation. This can only be changed by contacting support once
           selected.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an optional subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject.id} value={subject.id}>
-                    <div>
-                      <div className="font-medium">{subject.name}</div>
-                      <div className="text-sm text-gray-500">{subject.description}</div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+<Select value={selectedSubjectId} onValueChange={setSelectedSubjectId}>
+  <SelectTrigger>
+    <SelectValue placeholder="Select an optional subject" />
+  </SelectTrigger>
+  <SelectContent>
+    {subjects
+      .filter((subject) => subject.category === "OPTIONAL")
+      .map((subject) => (
+        <SelectItem key={subject.id} value={subject.id}>
+          <div>
+            <div className="font-medium">{subject.name}</div>
+            <div className="text-sm text-gray-500">{subject.description}</div>
+          </div>
+        </SelectItem>
+      ))}
+  </SelectContent>
+</Select>
           </div>
 
           <Alert>

@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-2xl font-bold">Lemura</h3>
             <p className="text-gray-300 text-sm">
-              Master UPSC answer writing with AI-powered feedback and comprehensive practice tools.
+              Master Civil Services Examination answer writing with AI-powered feedback and comprehensive practice tools.
             </p>
             <div className="flex space-x-4">
               <Link href="#" className="text-gray-400 hover:text-white transition-colors">

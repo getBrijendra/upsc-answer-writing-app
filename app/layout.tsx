@@ -17,9 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lemura - UPSC Answer Writing Practice",
+  title: "Lemura - Civil Service Examination Answer Writing Practice",
   description:
-    "Master UPSC answer writing with AI-powered feedback and MCQ generation - Powered by Lemura",
+    "Master Civil Services Examination answer writing with AI-powered feedback and MCQ generation - Powered by Lemura",
   generator: "v0.app",
   icons: {
     icon: [

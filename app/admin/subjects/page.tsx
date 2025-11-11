@@ -45,7 +45,7 @@ export default async function SubjectManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-black mb-2">Subject Management</h1>
-              <p className="text-gray-600 text-lg">Manage UPSC subjects and their configurations</p>
+              <p className="text-gray-600 text-lg">Manage Civil Service Examination subjects and their configurations</p>
             </div>
             <Link href="/admin/subjects/new">
               <Button className="bg-black text-white hover:bg-gray-800">
@@ -106,7 +106,7 @@ export default async function SubjectManagementPage() {
         <Card className="bg-white border border-gray-200">
           <CardHeader>
             <CardTitle className="text-black">All Subjects</CardTitle>
-            <CardDescription className="text-gray-600">Manage and configure UPSC subjects</CardDescription>
+            <CardDescription className="text-gray-600">Manage and configure Civil Service Examination subjects</CardDescription>
           </CardHeader>
           <CardContent>
             <SubjectManagementTable subjects={subjectsWithStats} />
