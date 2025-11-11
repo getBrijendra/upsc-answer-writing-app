@@ -30,17 +30,16 @@ export default function Header({ showAuth = true }: HeaderProps) {
             aria-label="Lemura home"
             className="group flex items-center gap-3"
           >
-            <div className="flex items-center justify-center rounded-md bg-white p-1 mr-1 ml-1px">
+            <div className="flex items-center justify-center mt-3">
               <Image
                 src="/logo/lemura_logo.png"
                 alt="Lemura logo"
-                width={87}
-                height={10}
+                width={130}
+                height={130}
                 priority
               />
             </div>
             <span className="text-3xl font-bold tracking-tight text-gray-900">
-              Lemura
             </span>
           </Link>
 

@@ -80,7 +80,7 @@ export default function PricingPage() {
             transition={{ duration: 0.6 }}
             className="text-5xl md:text-6xl font-extrabold tracking-tight"
           >
-            Choose Your <span className="text-primary">UPSC Plan</span>
+            Choose Your <span className="text-primary">Civil Services Examination Plan</span>
           </motion.h1>
 
           <motion.p
@@ -89,7 +89,7 @@ export default function PricingPage() {
             transition={{ delay: 0.2 }}
             className="text-lg text-muted-foreground mt-6 max-w-2xl mx-auto"
           >
-            Flexible credit packages and subscriptions to supercharge your UPSC preparation.
+            Flexible credit packages and subscriptions to supercharge your Civil Services Examination preparation.
           </motion.p>
 
           {/* Tab Switcher */}
@@ -334,7 +334,7 @@ export default function PricingPage() {
       {/* CTA Section */}
       <section className="py-20 bg-secondary text-secondary-foreground">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-extrabold mb-4">Ready to Start Your UPSC Journey?</h2>
+          <h2 className="text-4xl font-extrabold mb-4">Ready to Start Your Civil Services Examination Journey?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
             Choose the plan that fits your learning style and take the first step toward success.
           </p>

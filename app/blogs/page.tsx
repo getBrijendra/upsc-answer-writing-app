@@ -47,9 +47,9 @@ export default async function BlogsPage() {
       <section className="py-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">UPSC Knowledge Hub</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Civil Service Examination Knowledge Hub</h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Stay updated with the latest current affairs, general knowledge, and news relevant to your UPSC
+              Stay updated with the latest current affairs, general knowledge, and news relevant to your Civil Service Examination
               preparation
             </p>
           </div>
@@ -138,9 +138,9 @@ export default async function BlogsPage() {
       {/* CTA Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Start Your UPSC Journey?</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Start Your Civil Service Examination Journey?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of aspirants using AI-powered tools to ace their UPSC preparation
+            Join thousands of aspirants using AI-powered tools to ace their Civil Service Examination preparation
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup">

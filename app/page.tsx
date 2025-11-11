@@ -19,8 +19,7 @@ export default function HomePage() {
   // Text rotation setup
 const texts = [
   "AI Intelligence & Insight",
-  "AI Mentorship",
-  "AI Support & Success"
+  "AI Mentorship"
 ];
 
   const [index, setIndex] = useState(0)
@@ -37,8 +36,8 @@ const texts = [
       {/* Announcement Banner */}
       <div className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-white py-3 px-4 text-center font-semibold tracking-wide shadow-md animate-pulse">
         🎙️ Get Ready!{" "}
-        <span className="underline underline-offset-4">AI Voice Buddy</span> Is
-        Coming Soon !!!!!
+        <span className="underline underline-offset-4">A Talking Civil Services Examination Buddy</span> Is
+        Coming...
       </div>
 
       {/* Hero Section */}
@@ -47,12 +46,12 @@ const texts = [
           <div className="inline-block mb-6 px-4 py-2 bg-secondary rounded-full text-sm font-medium text-secondary-foreground">
             <span className="inline-flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-accent" />
-              India's #1 AI-Powered UPSC Buddy
+              India's #1 AI-Powered Civil Services Examination Buddy
             </span>
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-6 leading-tight">
-            Crack UPSC with
+            Crack Civil Services Examination with
             <span className="block mt-2 text-primary h-[1.5em] overflow-hidden relative pb-2">
 
               <span
@@ -66,7 +65,7 @@ const texts = [
 
           <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
             Write, analyze, and learn smarter with AI-powered tools — from answer
-            reviews to mind maps. Your UPSC prep just got a next-gen upgrade.
+            reviews to mind maps. Your Civil Service Examination prep just got a next-gen upgrade.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -167,7 +166,7 @@ const texts = [
             </div>
             <h3 className="text-2xl font-bold mb-3">Daily Essay Questions</h3>
             <p className="text-muted-foreground">
-              Free daily essay prompts inspired by UPSC standards to sharpen your
+              Free daily essay prompts inspired by Civil Service Examination standards to sharpen your
               writing and build consistency.
             </p>
           </Card>
@@ -177,11 +176,11 @@ const texts = [
         <div className="text-center bg-secondary rounded-3xl p-12 md:p-16 border-2 border-border shadow-xl">
           <Award className="w-16 h-16 text-primary mx-auto mb-6" />
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Your UPSC Journey, Supercharged by AI
+            Your Civil Services Examination Journey, Supercharged by AI
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             From answer reviews to mind maps — everything you need, all in one
-            intelligent UPSC preparation platform.
+            intelligent Civil Services Examination preparation platform.
           </p>
           <Link href="/auth/signup">
             <Button className="bg-primary text-primary-foreground hover:opacity-90 px-12 py-6 text-xl rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 font-semibold">

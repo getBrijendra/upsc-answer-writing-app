@@ -115,7 +115,7 @@ export default async function BlogDetailPage({
 
           {/* CTA */}
           <div className="bg-muted/30 rounded-lg p-8 text-center mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Ace Your UPSC Preparation?</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Ready to Ace Your Civil Service Examination Preparation?</h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Join thousands of aspirants using AI-powered tools for answer writing practice, MCQ generation, and
               personalized feedback.

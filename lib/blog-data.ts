@@ -6,7 +6,7 @@ export const demoBlogPosts = [
     excerpt:
       "Explore the major shifts in India's foreign policy landscape, including strategic partnerships, multilateral engagements, and regional diplomacy.",
     category: "current_affairs",
-    author: "Dr. Rajesh Kumar",
+    author: "Kalpana",
     publishedAt: "2024-01-15",
     readTime: "8 min read",
     image: "/india-foreign-policy.png",
@@ -18,7 +18,7 @@ export const demoBlogPosts = [
     excerpt:
       "Deep dive into India's climate action plans, renewable energy targets, and the challenges in achieving net zero emissions by 2070.",
     category: "general_knowledge",
-    author: "Prof. Meera Sharma",
+    author: "Kalpana",
     publishedAt: "2024-01-14",
     readTime: "10 min read",
     image: "/climate-change-india.jpg",
@@ -30,7 +30,7 @@ export const demoBlogPosts = [
     excerpt:
       "Analyzing the impact of Digital India on governance, economy, and society, along with the roadblocks in digital transformation.",
     category: "current_affairs",
-    author: "Amit Patel",
+    author: "Manisha",
     publishedAt: "2024-01-13",
     readTime: "7 min read",
     image: "/digital-india.jpg",
@@ -42,7 +42,7 @@ export const demoBlogPosts = [
     excerpt:
       "Comprehensive overview of India's economic performance, inflation trends, fiscal policies, and growth forecasts.",
     category: "news",
-    author: "Dr. Priya Desai",
+    author: "Anushka",
     publishedAt: "2024-01-12",
     readTime: "9 min read",
     image: "/indian-economy.jpg",
@@ -54,7 +54,7 @@ export const demoBlogPosts = [
     excerpt:
       "Understanding the latest constitutional amendments, their historical context, and impact on governance and citizens' rights.",
     category: "general_knowledge",
-    author: "Adv. Suresh Iyer",
+    author: "Akansha",
     publishedAt: "2024-01-11",
     readTime: "12 min read",
     image: "/indian-constitution.jpg",
@@ -66,7 +66,7 @@ export const demoBlogPosts = [
     excerpt:
       "Examining the complex dynamics of India-China relations, border issues, trade relations, and strategic competition.",
     category: "current_affairs",
-    author: "Dr. Vikram Singh",
+    author: "Peeyush",
     publishedAt: "2024-01-10",
     readTime: "11 min read",
     image: "/india-china-relations.jpg",

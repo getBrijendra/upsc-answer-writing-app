@@ -335,7 +335,7 @@ export default function AnswerWritingForm({ subjects }: AnswerWritingFormProps) 
                 id="question"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder="Enter the UPSC question..."
+                placeholder="Enter the Civil Service Examination question..."
                 className="min-h-[100px]"
               />
             </div>

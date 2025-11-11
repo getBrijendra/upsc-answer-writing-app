@@ -21,7 +21,7 @@ export default async function SubjectSelectionPage() {
     .single()
 
   // Get all available subjects
-  const { data: subjects } = await supabase.from("subjects").select("id, name, description").order("name")
+  const { data: subjects } = await supabase.from("subjects").select("id, name, description, category").order("name")
 
   if (!profile || !subjects) {
     redirect("/profile")
@@ -40,7 +40,7 @@ export default async function SubjectSelectionPage() {
             </Button>
           </Link>
           <h1 className="text-4xl font-bold text-black mb-2">Optional Subject Selection</h1>
-          <p className="text-gray-600 text-lg">Choose an optional subject to enhance your UPSC preparation</p>
+          <p className="text-gray-600 text-lg">Choose an optional subject to enhance your Civil Service Examination preparation</p>
         </div>
 
         <div className="max-w-2xl mx-auto">

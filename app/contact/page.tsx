@@ -16,7 +16,7 @@ export default function ContactPage() {
             </div>
             <h1 className="text-4xl font-bold text-black mb-4">Contact Us</h1>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Have questions about Lemura? We're here to help you succeed in your UPSC preparation journey.
+              Have questions about Lemura? We're here to help you succeed in your Civil Service Examination preparation journey.
             </p>
           </div>
 

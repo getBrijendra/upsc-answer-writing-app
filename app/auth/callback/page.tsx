@@ -11,7 +11,7 @@ export default function AuthCallback() {
     const supabase = createClient();
 
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.push("/dashboard");
+      if (data.session) router.push("/profile");
       else router.push("/auth/login");
     });
   }, [router]);

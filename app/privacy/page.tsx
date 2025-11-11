@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
                   <ul className="list-disc list-inside mt-2 space-y-1">
                     <li>Name and email address</li>
                     <li>Profile information</li>
-                    <li>UPSC preparation data and progress</li>
+                    <li>Civil Service Examination preparation data and progress</li>
                     <li>Answer submissions and feedback</li>
                   </ul>
                 </div>
