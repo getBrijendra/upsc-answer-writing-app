@@ -54,13 +54,13 @@ export default function AboutPage() {
       name: "Mr. Peeyush Prajapati",
       role: "Head of Content",
       description: "Marketing specialist with a focus on educational content and learner engagement.",
-      image: "/professional-indian-man-teacher.jpg",
+      image: "/peeyush.jpg",
     },
     {
       name: "Mr. Brijendra Kumar",
       role: "Product Manager",
       description: "Product strategist focused on learner experience and impactful educational outcomes.",
-      image: "/professional-indian-man-suit.png",
+      image: "/brij.jpg",
     },
   ]
 
