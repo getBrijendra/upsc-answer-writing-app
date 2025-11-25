@@ -90,11 +90,21 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-gray-300">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>techyhutsolutions@gmail.com</span>
+                <a
+                  href="mailto:techyhutsolutions@gmail.com"
+                  className="hover:text-white transition-colors"
+                >
+                  techyhutsolutions@gmail.com
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>+91 98765 43210</span>
+                <a
+                  href="tel:+919876543210"
+                  className="hover:text-white transition-colors"
+                >
+                  +91 98765 43210
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
